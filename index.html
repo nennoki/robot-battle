@@ -1,165 +1,1175 @@
-<!-- Header Title -->
-<div class="cyber-header p-3 flex justify-between items-center shrink-0">
-    <div>
-        <h1 class="font-rajdhani font-bold text-lg text-cyan-400 tracking-wider flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
-            ROBOT LOGIC SYSTEM
-        </h1>
-        <p class="text-[10px] text-gray-400 tracking-widest font-mono">AUTONOMOUS TACTICS SIMULATOR v4.8</p>
-    </div>
-    <div id="status-badge" class="px-2 py-0.5 text-[10px] font-mono font-bold bg-gray-800 text-gray-400 border border-gray-600 rounded">
-        STOPPED
-    </div>
-</div>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robot Battle Simulator</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-dark: #070913;
+            --panel-bg: rgba(11, 15, 25, 0.94);
+            --border-cyan: rgba(0, 243, 255, 0.35);
+            --glow-cyan: rgba(0, 243, 255, 0.2);
+        }
+        body {
+            background-color: var(--bg-dark);
+            font-family: 'Share Tech Mono', monospace;
+            color: #d1d5db;
+            overflow: hidden;
+            user-select: none;
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+        }
+        .font-rajdhani { font-family: 'Rajdhani', sans-serif; }
+        .cyber-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-cyan);
+            box-shadow: 0 0 20px var(--glow-cyan), inset 0 0 15px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+        }
+        .cyber-btn {
+            background: rgba(0, 243, 255, 0.08);
+            border: 1px solid var(--border-cyan);
+            color: #00f3ff;
+            transition: all 0.15s ease;
+            cursor: pointer;
+        }
+        .cyber-btn:hover {
+            background: rgba(0, 243, 255, 0.25);
+            box-shadow: 0 0 12px rgba(0, 243, 255, 0.5);
+            color: #ffffff;
+        }
+        .cyber-btn:active {
+            transform: scale(0.97);
+        }
+        .cyber-btn.active {
+            background: rgba(0, 243, 255, 0.35);
+            border-color: #00f3ff;
+            color: #ffffff;
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.6);
+        }
+        #canvas-container {
+            cursor: grab;
+        }
+        #canvas-container.grabbing {
+            cursor: grabbing;
+        }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.4); }
+        ::-webkit-scrollbar-thumb { background: rgba(0, 243, 255, 0.4); border-radius: 2px; }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col md:flex-row overflow-hidden">
 
-<!-- Global Control Toolbar -->
-<div class="p-2 grid grid-cols-2 gap-1.5 bg-black/40 border-b border-cyan-900/50 text-xs">
-    <button id="btn-toggle-battle" class="cyber-btn bg-cyan-600 hover:bg-cyan-500 text-black font-bold py-2 px-3 text-center text-xs tracking-wider uppercase font-rajdhani">
-        BATTLE START
-    </button>
-    <button id="btn-reset-battle" class="cyber-btn bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2 px-3 text-center text-xs tracking-wider uppercase font-rajdhani border border-gray-600">
-        RESET SIM
-    </button>
-    <button id="btn-toggle-tracking" class="cyber-btn bg-indigo-950 hover:bg-indigo-900 text-indigo-300 border border-indigo-500/40 py-1 px-2 text-[11px] font-mono">
-        TRACKING: <span id="txt-tracking" class="text-cyan-400 font-bold">ON</span>
-    </button>
-    <button id="btn-toggle-lead" class="cyber-btn bg-indigo-950 hover:bg-indigo-900 text-indigo-300 border border-indigo-500/40 py-1 px-2 text-[11px] font-mono">
-        LEAD AIM: <span id="txt-lead" class="text-cyan-400 font-bold">ON</span>
-    </button>
-</div>
-
-<!-- Unit Selector Tabs -->
-<div class="flex border-b border-gray-800 bg-black/60 text-xs font-rajdhani font-bold">
-    <button id="tab-player" class="tab-btn active flex-1 py-2 text-center text-cyan-400 hover:text-cyan-200 transition">
-        BLUE ROBOT (PLAYER)
-    </button>
-    <button id="tab-enemy" class="tab-btn flex-1 py-2 text-center text-red-400 hover:text-red-200 transition">
-        RED ROBOT (ENEMY)
-    </button>
-</div>
-
-<!-- Scrollable Logic & Assembly Controls -->
-<div class="flex-1 overflow-y-auto p-3 space-y-3 font-sans text-xs">
-
-    <!-- Unit Telemetry Card -->
-    <div class="bg-black/50 p-2.5 rounded border border-gray-800 space-y-2">
-        <div class="flex justify-between items-center font-mono text-[11px]">
-            <span id="txt-unit-title" class="font-bold text-cyan-400">BLUE ROBOT TELEMETRY</span>
-            <span id="txt-unit-los" class="text-emerald-400 text-[10px] bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-800">VISUAL: CLEAR</span>
-        </div>
-
-        <div>
-            <div class="flex justify-between text-[10px] font-mono text-gray-400 mb-0.5">
-                <span>ARMOR (HP)</span>
-                <span id="txt-hp-val">3000 / 3000</span>
+    <!-- 3D Canvas Viewport -->
+    <div id="canvas-container" class="flex-1 relative h-1/2 md:h-full bg-slate-950">
+        <!-- Top HUD -->
+        <div class="absolute top-3 left-3 pointer-events-none space-y-1.5 text-xs z-10">
+            <div class="bg-black/85 border border-cyan-500/40 px-3 py-1.5 rounded text-cyan-300 font-bold flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+                ACTIVE LOGIC: <span id="hud-active-chip" class="text-white">IDLE</span>
             </div>
-            <div class="w-full bg-gray-900 h-2 rounded overflow-hidden p-0.5 border border-gray-800">
-                <div id="bar-hp" class="gauge-fill bg-cyan-400 h-full rounded-sm" style="width: 100%;"></div>
-            </div>
-        </div>
-
-        <div>
-            <div class="flex justify-between text-[10px] font-mono text-gray-400 mb-0.5">
-                <span>ENERGY (EN)</span>
-                <span id="txt-en-val" class="text-purple-400 font-bold">100 / 100</span>
-            </div>
-            <div class="w-full bg-gray-900 h-2 rounded overflow-hidden p-0.5 border border-gray-800">
-                <div id="bar-en" class="gauge-fill bg-purple-500 h-full rounded-sm" style="width: 100%;"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Assembly Controls -->
-    <div class="bg-black/40 p-2.5 rounded border border-gray-800/80 space-y-2.5">
-        <div class="text-[11px] font-bold font-rajdhani text-gray-300 tracking-wider border-b border-gray-800 pb-1">
-            ASSEMBLY & SPECIFICATION
-        </div>
-
-        <div>
-            <label class="block text-[10px] font-mono text-gray-400 mb-1">FRAME TYPE (SPEED / EN / SENSOR)</label>
-            <div class="grid grid-cols-3 gap-1 text-[10px] font-mono">
-                <button data-frame="LIGHT" class="btn-frame-opt py-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded text-center border border-gray-700">LIGHT</button>
-                <button data-frame="MEDIUM" class="btn-frame-opt py-1 bg-cyan-900/60 text-cyan-300 rounded text-center border border-cyan-500 font-bold">MEDIUM</button>
-                <button data-frame="HEAVY" class="btn-frame-opt py-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded text-center border border-gray-700">HEAVY</button>
-            </div>
-        </div>
-
-        <div>
-            <label class="block text-[10px] font-mono text-gray-400 mb-1">WEAPON TYPE (DAMAGE / RATE / DROPOFF)</label>
-            <div class="grid grid-cols-3 gap-1 text-[10px] font-mono">
-                <button data-weapon="SHOTGUN" class="btn-weapon-opt py-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded text-center border border-gray-700">SHOTGUN</button>
-                <button data-weapon="MACHINEGUN" class="btn-weapon-opt py-1 bg-cyan-900/60 text-cyan-300 rounded text-center border border-cyan-500 font-bold">M-GUN</button>
-                <button data-weapon="RIFLE" class="btn-weapon-opt py-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded text-center border border-gray-700">RIFLE</button>
+            <div id="hud-overheat" class="hidden bg-red-950/85 border border-red-500/60 px-3 py-1 rounded text-red-300 font-bold flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                SYSTEM OVERHEAT: RECOVERY IN PROGRESS
             </div>
         </div>
 
-        <div>
-            <div class="flex justify-between items-center text-[10px] font-mono text-gray-400 mb-1">
-                <span>COMBAT RANGE THRESHOLD</span>
-                <span id="txt-threshold-val" class="text-cyan-400 font-bold">12.0m</span>
+        <!-- Camera Tracking Controls Overlay (Top Right) -->
+        <div class="absolute top-3 right-3 bg-black/85 border border-cyan-500/40 p-1.5 rounded text-[10px] z-10 flex flex-col gap-1">
+            <div class="text-[9px] text-cyan-300 font-bold tracking-wider px-1">CAMERA TRACKING</div>
+            <div class="grid grid-cols-2 gap-1">
+                <button id="cam-btn-center" class="cyber-btn py-1 px-2 rounded font-bold active" title="2機の中間点を追従">CENTER</button>
+                <button id="cam-btn-player" class="cyber-btn py-1 px-2 rounded font-bold" title="自機（青）を追従">BLUE</button>
+                <button id="cam-btn-enemy" class="cyber-btn py-1 px-2 rounded font-bold" title="敵機（赤）を追従">RED</button>
+                <button id="cam-btn-free" class="cyber-btn py-1 px-2 rounded font-bold" title="自由操作">FREE</button>
             </div>
-            <input id="slider-threshold" type="range" min="5" max="28" step="1" value="12" class="w-full">
         </div>
 
-        <div>
-            <div class="flex justify-between items-center text-[10px] font-mono text-gray-400 mb-1">
-                <span>OBSTACLE COVER TACTICS</span>
-                <span id="txt-cover-status" class="text-gray-500 font-bold">OFF</span>
+        <!-- Camera Operation Guide & Legend Overlay (Bottom Right) -->
+        <div class="absolute bottom-3 right-3 pointer-events-none bg-black/85 border border-slate-800 p-2.5 rounded text-[10px] text-slate-300 space-y-2 z-10">
+            <div class="border-b border-slate-700/60 pb-1.5 space-y-1">
+                <div class="text-cyan-400 font-bold">CONTROLS:</div>
+                <div>・左ドラッグ: 視点回転 (Orbit)</div>
+                <div>・右ドラッグ / Shift+ドラッグ: 画面パン (Pan)</div>
+                <div>・ホイール / ピンチ: 拡大縮小 (Zoom)</div>
             </div>
-            <button id="btn-toggle-cover" class="w-full py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded text-center border border-gray-700 font-mono text-[10px] transition">
-                COVER USE: <span id="txt-cover-btn" class="text-gray-400 font-bold">OFF (NORMAL)</span>
-            </button>
+            <div class="space-y-1">
+                <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 bg-cyan-400 rounded-sm"></span> BLUE ROBOT (PLAYER)</div>
+                <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 bg-red-500 rounded-sm"></span> RED ROBOT (ENEMY)</div>
+                <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 bg-slate-600 rounded-sm"></span> OBSTACLES (LOS BLOCK)</div>
+            </div>
         </div>
     </div>
 
-    <!-- Customizable Priority Pipeline -->
-    <div class="space-y-2">
-        <div class="text-[11px] font-bold font-rajdhani text-gray-300 tracking-wider flex justify-between items-center border-b border-gray-800 pb-1">
-            <span>CUSTOMIZABLE PRIORITY PIPELINE</span>
-            <span id="txt-sensor-info" class="text-[9px] font-mono text-purple-400">SENSOR: 16m</span>
+    <!-- Control Sidebar -->
+    <div class="w-full md:w-96 h-1/2 md:h-full cyber-panel flex flex-col z-20 border-t md:border-t-0 md:border-l border-cyan-900/50">
+        <!-- Header -->
+        <div class="p-3 flex justify-between items-center border-b border-cyan-900/50 bg-black/50">
+            <div>
+                <h1 class="font-rajdhani font-bold text-lg text-cyan-400 tracking-wider">ROBOT LOGIC SYSTEM</h1>
+                <div class="text-[10px] text-slate-400">AUTONOMOUS TACTICS SIMULATOR</div>
+            </div>
+            <div id="status-badge" class="px-2 py-0.5 text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-600 rounded">STOPPED</div>
         </div>
-        <p class="text-[10px] text-gray-400 font-mono">Click UP/DOWN to reorder evaluation priority (Top = Highest)</p>
 
-        <div id="priority-list-container" class="space-y-1.5 font-mono text-xs">
-            <!-- Dynamic Priority Chips -->
+        <!-- Control Buttons -->
+        <div class="p-2 grid grid-cols-2 gap-2 bg-black/40 border-b border-cyan-900/50 text-xs">
+            <button id="btn-toggle-battle" class="cyber-btn py-2 px-3 rounded font-bold uppercase font-rajdhani text-sm">BATTLE START</button>
+            <button id="btn-reset-battle" class="cyber-btn py-2 px-3 rounded font-bold uppercase font-rajdhani text-sm">RESET SIM</button>
+        </div>
+
+        <!-- Scrollable Configuration -->
+        <div class="flex-1 overflow-y-auto p-3 space-y-3 text-xs">
+            
+            <!-- Unit Selector -->
+            <div class="grid grid-cols-2 gap-1.5 bg-black/60 p-1 rounded border border-slate-800">
+                <button id="tab-btn-player" class="py-1 rounded font-rajdhani font-bold cyber-btn active">BLUE ROBOT (PLAYER)</button>
+                <button id="tab-btn-enemy" class="py-1 rounded font-rajdhani font-bold cyber-btn">RED ROBOT (ENEMY)</button>
+            </div>
+
+            <!-- Telemetry Monitor -->
+            <div class="bg-black/60 p-2.5 rounded border border-slate-800 space-y-2">
+                <div class="flex justify-between items-center text-[11px]">
+                    <span id="txt-selected-title" class="font-bold text-cyan-400">BLUE ROBOT TELEMETRY</span>
+                    <span id="txt-unit-los" class="text-emerald-400 text-[10px] font-bold">VISUAL: CLEAR</span>
+                </div>
+                <!-- HP Bar -->
+                <div>
+                    <div class="flex justify-between text-[10px] text-slate-400 mb-0.5">
+                        <span>ARMOR (HP)</span>
+                        <span id="txt-hp-val">3000 / 3000</span>
+                    </div>
+                    <div class="w-full bg-slate-900 h-2 rounded overflow-hidden p-0.5 border border-slate-800">
+                        <div id="bar-hp" class="bg-cyan-400 h-full rounded-sm transition-all" style="width: 100%;"></div>
+                    </div>
+                </div>
+                <!-- EN Bar -->
+                <div>
+                    <div class="flex justify-between text-[10px] text-slate-400 mb-0.5">
+                        <span>ENERGY (EN)</span>
+                        <span id="txt-en-val">100 / 100</span>
+                    </div>
+                    <div class="w-full bg-slate-900 h-2 rounded overflow-hidden p-0.5 border border-slate-800">
+                        <div id="bar-en" class="bg-amber-400 h-full rounded-sm transition-all" style="width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Assembly Parameters -->
+            <div class="bg-black/50 p-2.5 rounded border border-slate-800 space-y-2.5">
+                <div class="text-[11px] font-bold font-rajdhani text-cyan-300">ASSEMBLY & SPECIFICATION</div>
+                
+                <!-- Frame Type -->
+                <div>
+                    <label class="block text-[10px] text-slate-400 mb-1">FRAME TYPE (SPEED / EN)</label>
+                    <div class="grid grid-cols-3 gap-1">
+                        <button class="cyber-btn py-1 rounded text-[10px] font-bold frame-opt" data-frame="LIGHT">LIGHT</button>
+                        <button class="cyber-btn py-1 rounded text-[10px] font-bold frame-opt active" data-frame="MEDIUM">MEDIUM</button>
+                        <button class="cyber-btn py-1 rounded text-[10px] font-bold frame-opt" data-frame="HEAVY">HEAVY</button>
+                    </div>
+                </div>
+
+                <!-- Weapon Type -->
+                <div>
+                    <label class="block text-[10px] text-slate-400 mb-1">WEAPON TYPE (DAMAGE / RATE / DROPOFF)</label>
+                    <div class="grid grid-cols-3 gap-1">
+                        <button class="cyber-btn py-1 rounded text-[10px] font-bold wpn-opt" data-wpn="SHOTGUN">SHOTGUN</button>
+                        <button class="cyber-btn py-1 rounded text-[10px] font-bold wpn-opt active" data-wpn="MACHINEGUN">M-GUN</button>
+                        <button class="cyber-btn py-1 rounded text-[10px] font-bold wpn-opt" data-wpn="RIFLE">RIFLE</button>
+                    </div>
+                </div>
+
+                <!-- Distance Threshold Slider -->
+                <div>
+                    <div class="flex justify-between text-[10px] text-slate-400 mb-1">
+                        <span>COMBAT RANGE THRESHOLD</span>
+                        <span id="txt-range-val" class="text-cyan-400 font-bold">12.0m</span>
+                    </div>
+                    <input id="slider-range" type="range" min="4" max="24" step="0.5" value="12" class="w-full accent-cyan-400 bg-slate-800 h-1.5 rounded cursor-pointer">
+                </div>
+
+                <!-- Cover Tactics Toggle -->
+                <div>
+                    <label class="block text-[10px] text-slate-400 mb-1">OBSTACLE COVER TACTICS</label>
+                    <button id="btn-toggle-cover" class="w-full py-1.5 rounded text-[10px] font-bold cyber-btn">
+                        COVER USE: <span id="txt-cover-btn" class="text-slate-400">OFF (NORMAL)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Priority Pipeline Ordering -->
+            <div class="bg-black/50 p-2.5 rounded border border-slate-800 space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="text-[11px] font-bold font-rajdhani text-cyan-300">CUSTOMIZABLE PRIORITY PIPELINE</span>
+                    <span class="text-[9px] text-slate-500">EVAL ORDER</span>
+                </div>
+                <div class="text-[10px] text-slate-400 mb-1">Click ▲/▼ to change priority (Top = Evaluated First)</div>
+                <div id="priority-list" class="space-y-1.5">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
         </div>
     </div>
 
-    <!-- Terminal Log Window -->
-    <div class="bg-black/70 rounded p-2 border border-gray-800 font-mono text-[10px] space-y-1 h-28 overflow-y-auto" id="log-window">
-        <div class="text-gray-500">[SYSTEM] Robot Battle Engine initialized. Ready.</div>
+    <!-- AAR (After Action Review) Modal -->
+    <div id="aar-modal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="cyber-panel max-w-lg w-full p-5 rounded-lg space-y-4 border border-cyan-500/60 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-cyan-900/50 pb-2">
+                <div>
+                    <h2 class="font-rajdhani font-bold text-lg text-cyan-400">AFTER ACTION REVIEW (AAR)</h2>
+                    <div class="text-[10px] text-slate-400">POST-MATCH DIAGNOSTICS & LOGIC ADVISORY</div>
+                </div>
+                <div id="aar-winner-badge" class="px-2.5 py-1 text-xs font-bold rounded bg-cyan-950 border border-cyan-500 text-cyan-300">VICTORY: BLUE</div>
+            </div>
+
+            <div id="aar-content" class="text-xs text-slate-300 space-y-3 max-h-80 overflow-y-auto pr-1">
+                <!-- Dynamically filled with defeat diagnoses -->
+            </div>
+
+            <div class="flex justify-end pt-2 border-t border-cyan-900/50">
+                <button id="btn-close-aar" class="cyber-btn py-2 px-6 rounded font-bold uppercase font-rajdhani text-sm">CONFIRM & RESTART</button>
+            </div>
+        </div>
     </div>
-</div>
 
+    <script>
+        const CONFIG = {
+            arenaSize: 37.5,
+            wallHeight: 3.5,
+            dtLimit: 0.05
+        };
 
-<div class="absolute top-3 left-3 pointer-events-none space-y-1 font-mono text-xs">
-    <div class="bg-black/70 backdrop-blur border border-cyan-500/40 px-3 py-1.5 rounded text-cyan-300 font-bold flex items-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
-        ACTIVE BEHAVIOR: <span id="hud-active-chip" class="text-white">IDLE</span>
-    </div>
-    <div id="hud-overheat-warn" class="hidden bg-red-950/90 border border-red-500 text-red-300 px-3 py-1 rounded font-bold animate-pulse">
-        &gt;&gt; OVERHEAT WARNING: ENERGY DEPLETED &lt;&lt;
-    </div>
-</div>
+        let scene, camera, renderer, clock;
+        let isRunning = false;
+        let selectedTab = 'player'; // 'player' or 'enemy'
 
-<div class="absolute top-3 right-3 pointer-events-none bg-black/60 backdrop-blur border border-gray-800 p-2 rounded text-[10px] font-mono text-cyan-300/80 space-y-0.5">
-    <div><span class="text-white font-bold">ドラッグ:</span> カメラ回転</div>
-    <div><span class="text-white font-bold">右ドラッグ / 2本指:</span> 移動(パン)</div>
-    <div><span class="text-white font-bold">ホイール / ピンチ:</span> 拡大・縮小</div>
-</div>
+        // Camera Orbit, Pan, Zoom & Tracking Parameters
+        const cameraState = {
+            target: new THREE.Vector3(0, 1.2, 0),
+            theta: 0,
+            phi: Math.PI / 4.2,
+            distance: 42,
+            minDistance: 8,
+            maxDistance: 85,
+            minPhi: 0.05,
+            maxPhi: Math.PI / 2.05,
+            trackingMode: 'CENTER', // 'CENTER', 'PLAYER', 'ENEMY', 'FREE'
+            isPointerDown: false,
+            pointerAction: 'NONE', // 'ORBIT' or 'PAN'
+            lastMouseX: 0,
+            lastMouseY: 0,
+            touchDistance: 0
+        };
 
-<div class="absolute bottom-3 right-3 pointer-events-none bg-black/60 backdrop-blur border border-gray-800 p-2 rounded text-[10px] font-mono text-gray-400 space-y-1">
-    <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 bg-blue-500 rounded-sm"></span> BLUE ROBOT (PLAYER)</div>
-    <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 bg-red-500 rounded-sm"></span> RED ROBOT (ENEMY)</div>
-    <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 bg-slate-700 border border-cyan-400 rounded-sm"></span> OBSTACLE (WALL / LOS BLOCK)</div>
-</div>
+        // Weapon Preset Specs
+        const WEAPONS = {
+            SHOTGUN: { name: 'SHOTGUN', pellets: 5, spread: 0.16, damage: 32, cooldown: 0.9, bulletSpeed: 42, color: 0xffaa00, size: 0.16, maxRange: 16 },
+            MACHINEGUN: { name: 'MACHINEGUN', pellets: 1, spread: 0.04, damage: 68, cooldown: 0.28, bulletSpeed: 52, color: 0x00f3ff, size: 0.2, maxRange: 26 },
+            RIFLE: { name: 'RIFLE', pellets: 1, spread: 0.008, damage: 155, cooldown: 0.65, bulletSpeed: 70, color: 0x38bdf8, size: 0.28, maxRange: 38 }
+        };
 
+        // Frame Presets
+        const FRAMES = {
+            LIGHT: { speed: 8.5, maxHp: 2400, enDrain: 16, enRegen: 22, sensor: 26 },
+            MEDIUM: { speed: 6.8, maxHp: 3000, enDrain: 12, enRegen: 20, sensor: 22 },
+            HEAVY: { speed: 5.2, maxHp: 3800, enDrain: 9, enRegen: 17, sensor: 18 }
+        };
 
-    <div class="space-y-3 font-mono text-xs max-h-72 overflow-y-auto pr-1" id="aar-content"></div>
+        // Telemetry Tracker
+        const battleTelemetry = {
+            player: { damageDealt: 0, shotsFired: 0, shotsHit: 0, framesInLOS: 0, framesOverheated: 0, distanceAccum: 0, framesTotal: 0, coverUseTime: 0 },
+            enemy: { damageDealt: 0, shotsFired: 0, shotsHit: 0, framesInLOS: 0, framesOverheated: 0, distanceAccum: 0, framesTotal: 0, coverUseTime: 0 }
+        };
 
-    <div class="pt-2 flex justify-end">
-        <button id="btn-close-aar" class="cyber-btn bg-cyan-600 hover:bg-cyan-500 text-black font-bold py-2 px-6 text-xs uppercase font-rajdhani">
-            CONFIRM & RESTART
-        </button>
-    </div>
-</div>
+        const units = {
+            player: {
+                id: 'player',
+                name: 'BLUE ROBOT',
+                color: 0x00f3ff,
+                mesh: null,
+                hp: 3000,
+                maxHp: 3000,
+                en: 100,
+                maxEn: 100,
+                isOverheated: false,
+                overheatCooldown: 0,
+                pos: new THREE.Vector3(-16, 0, 0),
+                vel: new THREE.Vector3(),
+                rotY: 0,
+                targetRotY: 0,
+                frameType: 'MEDIUM',
+                weaponType: 'MACHINEGUN',
+                rangeThreshold: 12.0,
+                coverTactics: false,
+                shootTimer: 0,
+                hitTimer: 0,
+                activeBehavior: 'IDLE',
+                priorityPipeline: ['EVADE', 'COVER', 'APPROACH', 'COMBAT']
+            },
+            enemy: {
+                id: 'enemy',
+                name: 'RED ROBOT',
+                color: 0xff3333,
+                mesh: null,
+                hp: 3000,
+                maxHp: 3000,
+                en: 100,
+                maxEn: 100,
+                isOverheated: false,
+                overheatCooldown: 0,
+                pos: new THREE.Vector3(16, 0, 0),
+                vel: new THREE.Vector3(),
+                rotY: Math.PI,
+                targetRotY: Math.PI,
+                frameType: 'MEDIUM',
+                weaponType: 'MACHINEGUN',
+                rangeThreshold: 12.0,
+                coverTactics: true,
+                shootTimer: 0,
+                hitTimer: 0,
+                activeBehavior: 'IDLE',
+                priorityPipeline: ['EVADE', 'COVER', 'APPROACH', 'COMBAT']
+            }
+        };
+
+        let bullets = [];
+        let obstacles = [];
+
+        function init3D() {
+            const container = document.getElementById('canvas-container');
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x070913);
+
+            camera = new THREE.PerspectiveCamera(48, container.clientWidth / container.clientHeight, 0.1, 1000);
+            updateCameraPosition();
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(renderer.domElement);
+
+            clock = new THREE.Clock();
+
+            // Lighting
+            const ambLight = new THREE.AmbientLight(0xffffff, 0.75);
+            scene.add(ambLight);
+
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.85);
+            dirLight.position.set(25, 45, 20);
+            scene.add(dirLight);
+
+            // Ground & Neon Grid
+            const grid = new THREE.GridHelper(CONFIG.arenaSize * 2, 40, 0x00f3ff, 0x1e293b);
+            grid.position.y = 0.02;
+            scene.add(grid);
+
+            const floorGeo = new THREE.PlaneGeometry(CONFIG.arenaSize * 2, CONFIG.arenaSize * 2);
+            const floorMat = new THREE.MeshStandardMaterial({ color: 0x090d16, roughness: 0.8 });
+            const floor = new THREE.Mesh(floorGeo, floorMat);
+            floor.rotation.x = -Math.PI / 2;
+            scene.add(floor);
+
+            // Perimeter Boundary Barrier
+            const wallMat = new THREE.MeshBasicMaterial({ color: 0x00f3ff, wireframe: true, transparent: true, opacity: 0.25 });
+            const wallGeo = new THREE.BoxGeometry(CONFIG.arenaSize * 2, CONFIG.wallHeight, CONFIG.arenaSize * 2);
+            const arenaBox = new THREE.Mesh(wallGeo, wallMat);
+            arenaBox.position.y = CONFIG.wallHeight / 2;
+            scene.add(arenaBox);
+
+            // Setup Obstacles & Robots
+            setupObstacles();
+            createRobotMesh(units.player);
+            createRobotMesh(units.enemy);
+
+            // Setup Camera Control Handlers
+            setupCameraControls(container);
+
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        function setupCameraControls(container) {
+            // Prevent context menu so right-click pan works cleanly
+            container.addEventListener('contextmenu', e => e.preventDefault());
+
+            // Pointer down (Mouse & Touch)
+            container.addEventListener('pointerdown', (e) => {
+                cameraState.isPointerDown = true;
+                container.classList.add('grabbing');
+                cameraState.lastMouseX = e.clientX;
+                cameraState.lastMouseY = e.clientY;
+
+                if (e.pointerType === 'mouse') {
+                    // Right button (button === 2) or Shift+Left Click triggers Pan
+                    if (e.button === 2 || e.shiftKey) {
+                        cameraState.pointerAction = 'PAN';
+                        setTrackingMode('FREE');
+                    } else if (e.button === 0) {
+                        cameraState.pointerAction = 'ORBIT';
+                    }
+                } else {
+                    cameraState.pointerAction = 'ORBIT';
+                }
+            });
+
+            // Pointer move
+            window.addEventListener('pointermove', (e) => {
+                if (!cameraState.isPointerDown) return;
+
+                const dx = e.clientX - cameraState.lastMouseX;
+                const dy = e.clientY - cameraState.lastMouseY;
+                cameraState.lastMouseX = e.clientX;
+                cameraState.lastMouseY = e.clientY;
+
+                if (cameraState.pointerAction === 'ORBIT') {
+                    // Orbit rotate
+                    cameraState.theta -= dx * 0.0075;
+                    cameraState.phi = Math.max(cameraState.minPhi, Math.min(cameraState.maxPhi, cameraState.phi - dy * 0.0075));
+                } else if (cameraState.pointerAction === 'PAN') {
+                    // Pan screen laterally and vertically relative to camera viewpoint
+                    const forward = new THREE.Vector3().subVectors(cameraState.target, camera.position);
+                    forward.y = 0;
+                    forward.normalize();
+                    const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+                    
+                    const panFactor = cameraState.distance * 0.0018;
+                    cameraState.target.addScaledVector(right, -dx * panFactor);
+                    cameraState.target.addScaledVector(forward, dy * panFactor);
+                }
+            });
+
+            // Pointer up
+            window.addEventListener('pointerup', () => {
+                cameraState.isPointerDown = false;
+                cameraState.pointerAction = 'NONE';
+                container.classList.remove('grabbing');
+            });
+
+            // Zoom (Mouse Wheel)
+            container.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const zoomFactor = e.deltaY * 0.04;
+                cameraState.distance = Math.max(cameraState.minDistance, Math.min(cameraState.maxDistance, cameraState.distance + zoomFactor));
+            }, { passive: false });
+
+            // Touch Pinch-to-Zoom
+            container.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 2) {
+                    cameraState.pointerAction = 'PINCH';
+                    cameraState.touchDistance = Math.hypot(
+                        e.touches[0].clientX - e.touches[1].clientX,
+                        e.touches[0].clientY - e.touches[1].clientY
+                    );
+                }
+            }, { passive: true });
+
+            container.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 2 && cameraState.pointerAction === 'PINCH') {
+                    const currentDist = Math.hypot(
+                        e.touches[0].clientX - e.touches[1].clientX,
+                        e.touches[0].clientY - e.touches[1].clientY
+                    );
+                    const diff = cameraState.touchDistance - currentDist;
+                    cameraState.touchDistance = currentDist;
+                    cameraState.distance = Math.max(cameraState.minDistance, Math.min(cameraState.maxDistance, cameraState.distance + diff * 0.1));
+                }
+            }, { passive: true });
+        }
+
+        function setTrackingMode(mode) {
+            cameraState.trackingMode = mode;
+            document.getElementById('cam-btn-center').classList.toggle('active', mode === 'CENTER');
+            document.getElementById('cam-btn-player').classList.toggle('active', mode === 'PLAYER');
+            document.getElementById('cam-btn-enemy').classList.toggle('active', mode === 'ENEMY');
+            document.getElementById('cam-btn-free').classList.toggle('active', mode === 'FREE');
+        }
+
+        function updateCamera() {
+            // Update camera target based on tracking mode
+            if (cameraState.trackingMode === 'PLAYER') {
+                const targetPos = units.player.pos.clone().add(new THREE.Vector3(0, 1.4, 0));
+                cameraState.target.lerp(targetPos, 0.1);
+            } else if (cameraState.trackingMode === 'ENEMY') {
+                const targetPos = units.enemy.pos.clone().add(new THREE.Vector3(0, 1.4, 0));
+                cameraState.target.lerp(targetPos, 0.1);
+            } else if (cameraState.trackingMode === 'CENTER') {
+                const mid = units.player.pos.clone().add(units.enemy.pos).multiplyScalar(0.5);
+                mid.y = 1.2;
+                cameraState.target.lerp(mid, 0.08);
+            }
+
+            updateCameraPosition();
+        }
+
+        function updateCameraPosition() {
+            const x = cameraState.target.x + cameraState.distance * Math.sin(cameraState.phi) * Math.sin(cameraState.theta);
+            const y = cameraState.target.y + cameraState.distance * Math.cos(cameraState.phi);
+            const z = cameraState.target.z + cameraState.distance * Math.sin(cameraState.phi) * Math.cos(cameraState.theta);
+
+            camera.position.set(x, y, z);
+            camera.lookAt(cameraState.target);
+        }
+
+        function setupObstacles() {
+            const obsConfigs = [
+                { x: 0, z: 0, w: 5, d: 5, h: 3.8 },
+                { x: -10, z: -8, w: 4, d: 4, h: 3.5 },
+                { x: 10, z: 8, w: 4, d: 4, h: 3.5 }
+            ];
+
+            obsConfigs.forEach(cfg => {
+                const geo = new THREE.BoxGeometry(cfg.w, cfg.h, cfg.d);
+                const mat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5, metalness: 0.4 });
+                const mesh = new THREE.Mesh(geo, mat);
+                mesh.position.set(cfg.x, cfg.h / 2, cfg.z);
+                scene.add(mesh);
+
+                // Obstacle edge glow
+                const edgeGeo = new THREE.EdgesGeometry(geo);
+                const edgeMat = new THREE.LineBasicMaterial({ color: 0x00f3ff, transparent: true, opacity: 0.4 });
+                const wireframe = new THREE.LineSegments(edgeGeo, edgeMat);
+                mesh.add(wireframe);
+
+                obstacles.push({
+                    mesh,
+                    center: new THREE.Vector3(cfg.x, 0, cfg.z),
+                    w: cfg.w,
+                    d: cfg.d,
+                    minX: cfg.x - cfg.w / 2 - 1.0,
+                    maxX: cfg.x + cfg.w / 2 + 1.0,
+                    minZ: cfg.z - cfg.d / 2 - 1.0,
+                    maxZ: cfg.z + cfg.d / 2 + 1.0
+                });
+            });
+        }
+
+        function createRobotMesh(unit) {
+            const group = new THREE.Group();
+
+            // Torso
+            const torsoGeo = new THREE.BoxGeometry(1.4, 1.8, 1.0);
+            const torsoMat = new THREE.MeshStandardMaterial({ color: unit.color, roughness: 0.3, metalness: 0.7 });
+            const torso = new THREE.Mesh(torsoGeo, torsoMat);
+            torso.position.y = 1.4;
+            group.add(torso);
+
+            // Head / Visor
+            const headGeo = new THREE.BoxGeometry(0.8, 0.6, 0.8);
+            const headMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.2 });
+            const head = new THREE.Mesh(headGeo, headMat);
+            head.position.set(0, 2.5, 0.1);
+            group.add(head);
+
+            const visorGeo = new THREE.BoxGeometry(0.6, 0.2, 0.2);
+            const visorMat = new THREE.MeshBasicMaterial({ color: unit.color });
+            const visor = new THREE.Mesh(visorGeo, visorMat);
+            visor.position.set(0, 2.5, 0.52);
+            group.add(visor);
+
+            // Arm Weapon
+            const armGeo = new THREE.CylinderGeometry(0.18, 0.18, 1.8);
+            const armMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.8 });
+            const arm = new THREE.Mesh(armGeo, armMat);
+            arm.rotation.x = Math.PI / 2;
+            arm.position.set(0.9, 1.3, 0.6);
+            group.add(arm);
+
+            scene.add(group);
+            unit.mesh = group;
+            unit.mesh.position.copy(unit.pos);
+        }
+
+        function onWindowResize() {
+            const container = document.getElementById('canvas-container');
+            if (!container || !renderer || !camera) return;
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+
+        function checkLOS(fromPos, toPos) {
+            const rayOrigin = new THREE.Vector3(fromPos.x, 1.4, fromPos.z);
+            const rayDest = new THREE.Vector3(toPos.x, 1.4, toPos.z);
+            const dir = rayDest.clone().sub(rayOrigin);
+            const dist = dir.length();
+            dir.normalize();
+
+            for (const obs of obstacles) {
+                // Ray AABB collision check
+                const tminX = (obs.center.x - obs.w / 2 - rayOrigin.x) / dir.x;
+                const tmaxX = (obs.center.x + obs.w / 2 - rayOrigin.x) / dir.x;
+                const tminZ = (obs.center.z - obs.d / 2 - rayOrigin.z) / dir.z;
+                const tmaxZ = (obs.center.z + obs.d / 2 - rayOrigin.z) / dir.z;
+
+                const tnear = Math.max(Math.min(tminX, tmaxX), Math.min(tminZ, tmaxZ));
+                const tfar = Math.min(Math.max(tminX, tmaxX), Math.max(tminZ, tmaxZ));
+
+                if (tnear <= tfar && tfar > 0 && tnear < dist) {
+                    return false; // Obstacle blocks line of sight
+                }
+            }
+            return true;
+        }
+
+        function findBestCover(unit, enemy) {
+            let bestCover = null;
+            let bestDist = Infinity;
+
+            for (const obs of obstacles) {
+                const toObs = obs.center.clone().sub(enemy.pos).normalize();
+                const hidePos = obs.center.clone().addScaledVector(toObs, Math.max(obs.w, obs.d) * 0.75 + 1.2);
+                const d = unit.pos.distanceTo(hidePos);
+
+                const perp = new THREE.Vector3(-toObs.z, 0, toObs.x);
+                const peekPos = obs.center.clone().addScaledVector(perp, Math.max(obs.w, obs.d) * 0.5 + 2.4);
+
+                if (d < bestDist) {
+                    bestDist = d;
+                    bestCover = { hidePos, peekPos, obs };
+                }
+            }
+            return bestCover;
+        }
+
+        function fireWeapon(attacker, target) {
+            const wpn = WEAPONS[attacker.weaponType];
+            const dist = attacker.pos.distanceTo(target.pos);
+            const muzzle = attacker.pos.clone().add(new THREE.Vector3(0.9 * Math.cos(attacker.rotY), 1.3, -0.9 * Math.sin(attacker.rotY)));
+
+            // 敵の胸部中心（高さ1.4m）を正確な照準基準に設定
+            const targetCenter = target.pos.clone().add(new THREE.Vector3(0, 1.4, 0));
+            let flightTime = dist / wpn.bulletSpeed;
+            let targetAim = targetCenter.clone().addScaledVector(target.vel, flightTime);
+
+            for (let i = 0; i < wpn.pellets; i++) {
+                const spreadX = (Math.random() - 0.5) * wpn.spread * dist;
+                const spreadY = (Math.random() - 0.5) * wpn.spread * 0.5 * dist;
+                const spreadZ = (Math.random() - 0.5) * wpn.spread * dist;
+                const aimPoint = targetAim.clone().add(new THREE.Vector3(spreadX, spreadY, spreadZ));
+                const dir = aimPoint.sub(muzzle).normalize();
+
+                const geo = new THREE.SphereGeometry(wpn.size, 6, 6);
+                const mat = new THREE.MeshBasicMaterial({ color: wpn.color });
+                const mesh = new THREE.Mesh(geo, mat);
+                mesh.position.copy(muzzle);
+                scene.add(mesh);
+
+                bullets.push({
+                    mesh,
+                    pos: muzzle.clone(),
+                    dir,
+                    speed: wpn.bulletSpeed,
+                    life: wpn.maxRange / wpn.bulletSpeed,
+                    baseDamage: wpn.damage,
+                    attackerId: attacker.id,
+                    targetId: target.id
+                });
+            }
+
+            attacker.shootTimer = wpn.cooldown;
+            battleTelemetry[attacker.id].shotsFired += wpn.pellets;
+        }
+
+        function updateRobotAI(self, target, dt) {
+            const frame = FRAMES[self.frameType];
+            const wpn = WEAPONS[self.weaponType];
+            const dist = self.pos.distanceTo(target.pos);
+            const hasLOS = checkLOS(self.pos, target.pos);
+
+            // Energy & Overheat
+            if (self.isOverheated) {
+                self.overheatCooldown -= dt;
+                self.en = Math.min(self.maxEn, self.en + frame.enRegen * 0.8 * dt);
+                if (self.overheatCooldown <= 0 && self.en >= 40) {
+                    self.isOverheated = false;
+                }
+            } else {
+                self.en = Math.min(self.maxEn, self.en + frame.enRegen * dt);
+            }
+
+            // Cooldown timers
+            if (self.shootTimer > 0) self.shootTimer -= dt;
+            if (self.hitTimer > 0) self.hitTimer -= dt;
+
+            // Tracking Telemetry
+            battleTelemetry[self.id].framesTotal++;
+            battleTelemetry[self.id].distanceAccum += dist;
+            if (hasLOS) battleTelemetry[self.id].framesInLOS++;
+            if (self.isOverheated) battleTelemetry[self.id].framesOverheated++;
+
+            let moveDir = new THREE.Vector3();
+            let desiredAction = 'IDLE';
+
+            // Target vector
+            const toTarget = target.pos.clone().sub(self.pos);
+            toTarget.y = 0;
+            const toTargetDir = toTarget.clone().normalize();
+
+            // Evaluate Custom Priority Pipeline
+            for (const step of self.priorityPipeline) {
+                if (desiredAction !== 'IDLE') break;
+
+                // Priority Step: EMERGENCY EVADE
+                if (step === 'EVADE' && self.hitTimer > 0) {
+                    desiredAction = 'EVADE';
+                    const lateral = new THREE.Vector3(-toTargetDir.z, 0, toTargetDir.x);
+                    const dodgeSign = (Math.sin(clock.getElapsedTime() * 5) > 0) ? 1 : -1;
+                    moveDir.addScaledVector(lateral, dodgeSign * 1.0);
+                    moveDir.addScaledVector(toTargetDir, -0.6); // slight retreat
+                    self.activeBehavior = 'PRI: EMERGENCY EVADE (CONTINUOUS FIRE)';
+
+                    // CONTINUOUS SHOOTING & MOVING DURING EVADE
+                    if (self.shootTimer <= 0 && hasLOS && !self.isOverheated) {
+                        fireWeapon(self, target);
+                    }
+                }
+
+                // Priority Step: COVER TACTICS
+                else if (step === 'COVER' && self.coverTactics) {
+                    const cover = findBestCover(self, target);
+                    if (cover) {
+                        desiredAction = 'COVER';
+                        battleTelemetry[self.id].coverUseTime++;
+
+                        // Peek & Fire Logic:
+                        if (self.shootTimer <= 0.1) {
+                            const peekDir = cover.peekPos.clone().sub(self.pos);
+                            if (peekDir.length() > 0.5) {
+                                moveDir.copy(peekDir.normalize());
+                            }
+                            self.activeBehavior = 'PRI: COVER (PEEK & FIRE)';
+                            if (hasLOS && self.shootTimer <= 0 && !self.isOverheated) {
+                                fireWeapon(self, target);
+                            }
+                        } else {
+                            const hideDir = cover.hidePos.clone().sub(self.pos);
+                            if (hideDir.length() > 0.5) {
+                                moveDir.copy(hideDir.normalize());
+                            }
+                            self.activeBehavior = 'PRI: COVER (HIDING & CHARGING)';
+                        }
+                    }
+                }
+
+                // Priority Step: APPROACH & SLALOM BYPASS
+                else if (step === 'APPROACH' && dist > self.rangeThreshold) {
+                    desiredAction = 'APPROACH';
+                    self.activeBehavior = 'PRI: APPROACH & RECON';
+
+                    if (!hasLOS) {
+                        const side = new THREE.Vector3(-toTargetDir.z, 0, toTargetDir.x);
+                        moveDir.addScaledVector(toTargetDir, 0.7);
+                        moveDir.addScaledVector(side, 0.7);
+                        self.activeBehavior = 'PRI: SLALOM BYPASS (SEEKING LOS)';
+                    } else {
+                        moveDir.copy(toTargetDir);
+                        if (self.shootTimer <= 0 && !self.isOverheated) {
+                            fireWeapon(self, target);
+                        }
+                    }
+                }
+
+                // Priority Step: COMBAT & RANGE KITING
+                else if (step === 'COMBAT') {
+                    desiredAction = 'COMBAT';
+                    if (dist < self.rangeThreshold * 0.7) {
+                        moveDir.addScaledVector(toTargetDir, -0.85);
+                        self.activeBehavior = 'PRI: RANGE KITE & FIRE';
+                    } else {
+                        const strafe = new THREE.Vector3(-toTargetDir.z, 0, toTargetDir.x);
+                        moveDir.addScaledVector(strafe, Math.sin(clock.getElapsedTime() * 2) * 0.6);
+                        self.activeBehavior = 'PRI: ENGAGE COMBAT';
+                    }
+
+                    if (self.shootTimer <= 0 && hasLOS && !self.isOverheated) {
+                        fireWeapon(self, target);
+                    }
+                }
+            }
+
+            // Apply movement physics and speed
+            if (moveDir.lengthSq() > 0.001) {
+                moveDir.normalize();
+                let speedMultiplier = self.isOverheated ? 0.45 : 1.0;
+                self.vel.copy(moveDir).multiplyScalar(frame.speed * speedMultiplier);
+                self.pos.addScaledVector(self.vel, dt);
+                
+                if (!self.isOverheated) {
+                    self.en -= frame.enDrain * dt;
+                    if (self.en <= 0) {
+                        self.en = 0;
+                        self.isOverheated = true;
+                        self.overheatCooldown = 2.5;
+                    }
+                }
+            } else {
+                self.vel.set(0, 0, 0);
+            }
+
+            // Turn towards target smoothly matching movement speed
+            const targetAngle = Math.atan2(toTargetDir.x, toTargetDir.z);
+            let angleDiff = targetAngle - self.rotY;
+            while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+            while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+            const turnRate = Math.min(Math.abs(angleDiff), frame.speed * 0.75 * dt);
+            self.rotY += Math.sign(angleDiff) * turnRate;
+
+            // Obstacle & Arena Boundary Collision
+            handleCollisions(self);
+
+            // Update mesh transforms
+            self.mesh.position.copy(self.pos);
+            self.mesh.rotation.y = self.rotY;
+        }
+
+        function handleCollisions(unit) {
+            const bound = CONFIG.arenaSize - 1.5;
+            unit.pos.x = Math.max(-bound, Math.min(bound, unit.pos.x));
+            unit.pos.z = Math.max(-bound, Math.min(bound, unit.pos.z));
+
+            for (const obs of obstacles) {
+                if (unit.pos.x > obs.minX && unit.pos.x < obs.maxX &&
+                    unit.pos.z > obs.minZ && unit.pos.z < obs.maxZ) {
+                    const dx1 = Math.abs(unit.pos.x - obs.minX);
+                    const dx2 = Math.abs(unit.pos.x - obs.maxX);
+                    const dz1 = Math.abs(unit.pos.z - obs.minZ);
+                    const dz2 = Math.abs(unit.pos.z - obs.maxZ);
+                    const min = Math.min(dx1, dx2, dz1, dz2);
+
+                    if (min === dx1) unit.pos.x = obs.minX;
+                    else if (min === dx2) unit.pos.x = obs.maxX;
+                    else if (min === dz1) unit.pos.z = obs.minZ;
+                    else unit.pos.z = obs.maxZ;
+                }
+            }
+        }
+
+        function updateBullets(dt) {
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                const b = bullets[i];
+                const moveDist = b.speed * dt;
+                const prevPos = b.pos.clone();
+                b.pos.addScaledVector(b.dir, moveDist);
+                b.mesh.position.copy(b.pos);
+                b.life -= dt;
+
+                const target = (b.targetId === 'player') ? units.player : units.enemy;
+                const targetCenter = target.pos.clone().add(new THREE.Vector3(0, 1.4, 0));
+
+                // 高速弾抜け（トンネリング）防止：前フレームから現在位置までの線分と標的中心との最近接距離を算出
+                const v = b.dir.clone();
+                const w = targetCenter.clone().sub(prevPos);
+                const proj = Math.max(0, Math.min(moveDist, w.dot(v)));
+                const closestPoint = prevPos.clone().addScaledVector(v, proj);
+                const hitDist = closestPoint.distanceTo(targetCenter);
+
+                if (hitDist < 1.7) {
+                    target.hp = Math.max(0, target.hp - b.baseDamage);
+                    target.hitTimer = 1.0;
+                    battleTelemetry[b.attackerId].shotsHit++;
+                    battleTelemetry[b.attackerId].damageDealt += b.baseDamage;
+
+                    // 被弾時の視覚的フラッシュエフェクト（赤発光）
+                    if (target.mesh && target.mesh.children[0]) {
+                        target.mesh.children[0].material.color.setHex(0xffffff);
+                        setTimeout(() => {
+                            if (target.mesh && target.mesh.children[0]) {
+                                target.mesh.children[0].material.color.setHex(target.color);
+                            }
+                        }, 60);
+                    }
+
+                    scene.remove(b.mesh);
+                    bullets.splice(i, 1);
+
+                    if (target.hp <= 0) {
+                        endBattle(b.attackerId, target.id);
+                    }
+                    continue;
+                }
+
+                let hitObstacle = false;
+                for (const obs of obstacles) {
+                    if (b.pos.x > obs.minX + 0.8 && b.pos.x < obs.maxX - 0.8 &&
+                        b.pos.z > obs.minZ + 0.8 && b.pos.z < obs.maxZ - 0.8 &&
+                        b.pos.y >= 0 && b.pos.y <= 4.0) {
+                        hitObstacle = true;
+                        break;
+                    }
+                }
+
+                if (b.life <= 0 || hitObstacle) {
+                    scene.remove(b.mesh);
+                    bullets.splice(i, 1);
+                }
+            }
+        }
+
+        function endBattle(winnerId, loserId) {
+            isRunning = false;
+            document.getElementById('status-badge').textContent = 'BATTLE END';
+            document.getElementById('btn-toggle-battle').textContent = 'BATTLE START';
+
+            const loser = units[loserId];
+            const winner = units[winnerId];
+            const loserTelem = battleTelemetry[loserId];
+
+            const avgDist = (loserTelem.distanceAccum / Math.max(1, loserTelem.framesTotal)).toFixed(1);
+            const hitRate = ((loserTelem.shotsHit / Math.max(1, loserTelem.shotsFired)) * 100).toFixed(1);
+            const losPercent = ((loserTelem.framesInLOS / Math.max(1, loserTelem.framesTotal)) * 100).toFixed(1);
+
+            let diagnosisHtml = `
+                <div class="bg-black/60 p-2.5 rounded border border-slate-800 space-y-1">
+                    <div class="text-[10px] text-slate-400">TELEMETRY SUMMARY (${loser.name})</div>
+                    <div class="grid grid-cols-3 gap-2 text-[11px] font-bold">
+                        <div>AVG DIST: <span class="text-cyan-400">${avgDist}m</span></div>
+                        <div>HIT RATE: <span class="text-cyan-400">${hitRate}%</span></div>
+                        <div>LOS UPTIME: <span class="text-cyan-400">${losPercent}%</span></div>
+                    </div>
+                </div>
+                <div class="space-y-2">
+            `;
+
+            let advices = [];
+
+            if (loser.weaponType === 'SHOTGUN' && avgDist > 10.0) {
+                advices.push({
+                    title: 'RANGE & ASSEMBLY MISMATCH',
+                    desc: `ショットガン装備に対し、平均交戦距離(${avgDist}m)が離れすぎていたため著しい距離減衰と散弾ロスが発生しました。COMBAT RANGE THRESHOLDを6〜8mに短縮するか、M-GUN / RIFLEへの換装を推奨します。`
+                });
+            }
+
+            if (loserTelem.framesOverheated > loserTelem.framesTotal * 0.25) {
+                advices.push({
+                    title: 'ENERGY COLLAPSE (OVERHEAT)',
+                    desc: `戦闘時間の25%以上がエネルギー枯渇（オーバーヒート）状態でした。機動速度の低下が原因で被弾が増大しました。FRAME TYPEをMEDIUM/HEAVYにするか、カバー待機を活用したEN回復時間を設けてください。`
+                });
+            }
+
+            if (loserTelem.framesInLOS < loserTelem.framesTotal * 0.35) {
+                advices.push({
+                    title: 'BLIND SPOT & SIGHT LOSS',
+                    desc: `敵機を目視できていた時間が全戦闘の35%未満でした。障害物に射線を遮られ反撃のチャンスを失っています。Priority PipelineのAPPROACH（迂回・接近）の順位を上げるか、COVER TACTICSを見直してください。`
+                });
+            }
+
+            if (advices.length === 0) {
+                advices.push({
+                    title: 'ATTRITION / DPS DEFICIT',
+                    desc: `戦術的エラーは軽微でしたが、相手機体との純粋な火力・装甲耐久差により押し負けました。武器の命中率向上（偏差射撃活用）またはFRAMEの装甲強化を推奨します。`
+                });
+            }
+
+            advices.forEach(adv => {
+                diagnosisHtml += `
+                    <div class="bg-red-950/40 border-l-2 border-red-500 p-2.5 rounded-r">
+                        <div class="font-bold text-red-400 text-xs">${adv.title}</div>
+                        <div class="text-[11px] text-slate-300 mt-1 leading-relaxed">${adv.desc}</div>
+                    </div>
+                `;
+            });
+
+            diagnosisHtml += `</div>`;
+
+            document.getElementById('aar-winner-badge').textContent = `WINNER: ${winner.name}`;
+            document.getElementById('aar-content').innerHTML = diagnosisHtml;
+            document.getElementById('aar-modal').classList.remove('hidden');
+        }
+
+        function initUI() {
+            // Battle Toggle & Reset
+            document.getElementById('btn-toggle-battle').addEventListener('click', () => {
+                isRunning = !isRunning;
+                document.getElementById('status-badge').textContent = isRunning ? 'BATTLE ACTIVE' : 'STOPPED';
+                document.getElementById('btn-toggle-battle').textContent = isRunning ? 'STOP BATTLE' : 'BATTLE START';
+            });
+
+            document.getElementById('btn-reset-battle').addEventListener('click', resetSim);
+
+            // Camera Tracking Buttons
+            document.getElementById('cam-btn-center').addEventListener('click', () => setTrackingMode('CENTER'));
+            document.getElementById('cam-btn-player').addEventListener('click', () => setTrackingMode('PLAYER'));
+            document.getElementById('cam-btn-enemy').addEventListener('click', () => setTrackingMode('ENEMY'));
+            document.getElementById('cam-btn-free').addEventListener('click', () => setTrackingMode('FREE'));
+
+            // Tab Switching
+            document.getElementById('tab-btn-player').addEventListener('click', () => switchTab('player'));
+            document.getElementById('tab-btn-enemy').addEventListener('click', () => switchTab('enemy'));
+
+            // Frame Type Buttons
+            document.querySelectorAll('.frame-opt').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const val = e.target.dataset.frame;
+                    units[selectedTab].frameType = val;
+                    units[selectedTab].maxHp = FRAMES[val].maxHp;
+                    units[selectedTab].hp = FRAMES[val].maxHp;
+                    updateUIState();
+                });
+            });
+
+            // Weapon Type Buttons
+            document.querySelectorAll('.wpn-opt').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    units[selectedTab].weaponType = e.target.dataset.wpn;
+                    updateUIState();
+                });
+            });
+
+            // Range Slider
+            document.getElementById('slider-range').addEventListener('input', (e) => {
+                units[selectedTab].rangeThreshold = parseFloat(e.target.value);
+                document.getElementById('txt-range-val').textContent = `${e.target.value}m`;
+            });
+
+            // Cover Toggle
+            document.getElementById('btn-toggle-cover').addEventListener('click', () => {
+                units[selectedTab].coverTactics = !units[selectedTab].coverTactics;
+                updateUIState();
+            });
+
+            // AAR Modal Close
+            document.getElementById('btn-close-aar').addEventListener('click', () => {
+                document.getElementById('aar-modal').classList.add('hidden');
+                resetSim();
+            });
+
+            renderPriorityList();
+            updateUIState();
+        }
+
+        function switchTab(tab) {
+            selectedTab = tab;
+            document.getElementById('tab-btn-player').classList.toggle('active', tab === 'player');
+            document.getElementById('tab-btn-enemy').classList.toggle('active', tab === 'enemy');
+            document.getElementById('txt-selected-title').textContent = (tab === 'player') ? 'BLUE ROBOT TELEMETRY' : 'RED ROBOT TELEMETRY';
+            renderPriorityList();
+            updateUIState();
+        }
+
+        function updateUIState() {
+            const unit = units[selectedTab];
+            document.querySelectorAll('.frame-opt').forEach(b => b.classList.toggle('active', b.dataset.frame === unit.frameType));
+            document.querySelectorAll('.wpn-opt').forEach(b => b.classList.toggle('active', b.dataset.wpn === unit.weaponType));
+            document.getElementById('slider-range').value = unit.rangeThreshold;
+            document.getElementById('txt-range-val').textContent = `${unit.rangeThreshold.toFixed(1)}m`;
+            document.getElementById('txt-cover-btn').textContent = unit.coverTactics ? 'ON (AGGRESSIVE)' : 'OFF (NORMAL)';
+            document.getElementById('txt-cover-btn').className = unit.coverTactics ? 'text-cyan-400 font-bold' : 'text-slate-400';
+        }
+
+        function renderPriorityList() {
+            const listEl = document.getElementById('priority-list');
+            listEl.innerHTML = '';
+            const pipe = units[selectedTab].priorityPipeline;
+
+            const LABELS = {
+                EVADE: '01. EMERGENCY EVADE (CONTINUOUS FIRE & RETREAT)',
+                COVER: '02. OBSTACLE COVER (PEEK & FIRE TACTICS)',
+                APPROACH: '03. APPROACH & SLALOM BYPASS',
+                COMBAT: '04. ENGAGE & RANGE KITING'
+            };
+
+            pipe.forEach((step, idx) => {
+                const item = document.createElement('div');
+                item.className = 'flex items-center justify-between bg-black/60 px-2 py-1.5 rounded border border-slate-800 text-[10px]';
+                item.innerHTML = `
+                    <span class="text-slate-300 font-bold">${LABELS[step]}</span>
+                    <div class="flex gap-1">
+                        <button class="cyber-btn px-1.5 py-0.5 rounded text-[9px]" ${idx === 0 ? 'disabled' : ''} onclick="movePriority(${idx}, -1)">▲</button>
+                        <button class="cyber-btn px-1.5 py-0.5 rounded text-[9px]" ${idx === pipe.length - 1 ? 'disabled' : ''} onclick="movePriority(${idx}, 1)">▼</button>
+                    </div>
+                `;
+                listEl.appendChild(item);
+            });
+        }
+
+        window.movePriority = function(index, dir) {
+            const pipe = units[selectedTab].priorityPipeline;
+            const targetIdx = index + dir;
+            if (targetIdx < 0 || targetIdx >= pipe.length) return;
+            const temp = pipe[index];
+            pipe[index] = pipe[targetIdx];
+            pipe[targetIdx] = temp;
+            renderPriorityList();
+        };
+
+        function resetSim() {
+            isRunning = false;
+            bullets.forEach(b => scene.remove(b.mesh));
+            bullets = [];
+
+            units.player.hp = units.player.maxHp;
+            units.player.en = units.player.maxEn;
+            units.player.isOverheated = false;
+            units.player.pos.set(-16, 0, 0);
+            units.player.vel.set(0, 0, 0);
+            units.player.rotY = 0;
+
+            units.enemy.hp = units.enemy.maxHp;
+            units.enemy.en = units.enemy.maxEn;
+            units.enemy.isOverheated = false;
+            units.enemy.pos.set(16, 0, 0);
+            units.enemy.vel.set(0, 0, 0);
+            units.enemy.rotY = Math.PI;
+
+            ['player', 'enemy'].forEach(id => {
+                battleTelemetry[id] = { damageDealt: 0, shotsFired: 0, shotsHit: 0, framesInLOS: 0, framesOverheated: 0, distanceAccum: 0, framesTotal: 0, coverUseTime: 0 };
+            });
+
+            document.getElementById('status-badge').textContent = 'STOPPED';
+            document.getElementById('btn-toggle-battle').textContent = 'BATTLE START';
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const dt = Math.min(clock.getDelta(), CONFIG.dtLimit);
+
+            if (isRunning) {
+                updateRobotAI(units.player, units.enemy, dt);
+                updateRobotAI(units.enemy, units.player, dt);
+                updateBullets(dt);
+            }
+
+            // Smooth camera update (Zoom / Orbit / Pan / Tracking)
+            updateCamera();
+
+            // Sync HUD & Telemetry
+            const selUnit = units[selectedTab];
+            document.getElementById('txt-hp-val').textContent = `${Math.round(selUnit.hp)} / ${selUnit.maxHp}`;
+            document.getElementById('bar-hp').style.width = `${Math.max(0, (selUnit.hp / selUnit.maxHp) * 100)}%`;
+            document.getElementById('txt-en-val').textContent = `${Math.round(selUnit.en)} / ${selUnit.maxEn}`;
+            document.getElementById('bar-en').style.width = `${Math.max(0, (selUnit.en / selUnit.maxEn) * 100)}%`;
+
+            const hasLOS = checkLOS(units.player.pos, units.enemy.pos);
+            const losEl = document.getElementById('txt-unit-los');
+            if (hasLOS) {
+                losEl.textContent = 'VISUAL: CLEAR';
+                losEl.className = 'text-emerald-400 text-[10px] font-bold';
+            } else {
+                losEl.textContent = 'VISUAL: BLOCKED (SENSOR ONLY)';
+                losEl.className = 'text-amber-400 text-[10px] font-bold';
+            }
+
+            document.getElementById('hud-active-chip').textContent = units.player.activeBehavior;
+            document.getElementById('hud-overheat').classList.toggle('hidden', !units.player.isOverheated);
+
+            renderer.render(scene, camera);
+        }
+
+        window.onload = () => {
+            init3D();
+            initUI();
+            animate();
+        };
+    </script>
+</body>
+</html>
