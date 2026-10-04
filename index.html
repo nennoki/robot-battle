@@ -1,1200 +1,165 @@
-    body {
-        background-color: var(--bg-dark);
-        color: #d1d5db;
-        font-family: 'Inter', sans-serif;
-        overflow: hidden;
-        user-select: none;
-    }
-
-    .font-rajdhani {
-        font-family: 'Rajdhani', sans-serif;
-    }
-
-    .cyber-panel {
-        background: var(--panel-bg);
-        border: 1px solid rgba(0, 243, 255, 0.25);
-        box-shadow: 0 0 15px rgba(0, 243, 255, 0.08), inset 0 0 15px rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(8px);
-    }
-
-    .cyber-header {
-        background: linear-gradient(90deg, rgba(0, 243, 255, 0.15), transparent);
-        border-left: 4px solid var(--border-cyan);
-    }
-
-    ::-webkit-scrollbar {
-        width: 4px;
-    }
-    ::-webkit-scrollbar-track {
-        background: rgba(0,0,0,0.3);
-    }
-    ::-webkit-scrollbar-thumb {
-        background: var(--border-cyan);
-        border-radius: 2px;
-    }
-
-    .cyber-btn {
-        position: relative;
-        transition: all 0.15s ease;
-        clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
-    }
-    .cyber-btn:hover {
-        filter: brightness(1.25);
-        box-shadow: 0 0 10px rgba(0, 243, 255, 0.4);
-    }
-    .cyber-btn:active {
-        transform: scale(0.97);
-    }
-
-    input[type=range] {
-        -webkit-appearance: none;
-        background: #111827;
-        border-radius: 4px;
-        height: 6px;
-        border: 1px solid rgba(0, 243, 255, 0.3);
-    }
-    input[type=range]::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        height: 16px;
-        width: 16px;
-        border-radius: 2px;
-        background: var(--border-cyan);
-        cursor: pointer;
-        box-shadow: 0 0 8px var(--border-cyan);
-    }
-
-    .gauge-fill {
-        transition: width 0.15s ease-out;
-    }
-
-    .tab-btn.active {
-        background: rgba(0, 243, 255, 0.2);
-        border-bottom: 2px solid var(--border-cyan);
-        color: #fff;
-    }
-
-    .scanline {
-        background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0, 0, 0, 0.3) 50%, rgba(0, 0, 0, 0.3));
-        background-size: 100% 4px;
-        pointer-events: none;
-    }
-</style>
-
-
-<!-- LEFT PANEL: ROBOT LOGIC CONTROL & CUSTOMIZER -->
-<aside class="w-full md:w-[400px] h-1/2 md:h-full cyber-panel flex flex-col z-20 shrink-0 border-r border-cyan-500/30">
-    
-    <!-- Header Title -->
-    <div class="cyber-header p-3 flex justify-between items-center shrink-0">
-        <div>
-            <h1 class="font-rajdhani font-bold text-lg text-cyan-400 tracking-wider flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
-                ROBOT LOGIC SYSTEM
-            </h1>
-            <p class="text-[10px] text-gray-400 tracking-widest font-mono">AUTONOMOUS TACTICS SIMULATOR v4.8</p>
-        </div>
-        <div id="status-badge" class="px-2 py-0.5 text-[10px] font-mono font-bold bg-gray-800 text-gray-400 border border-gray-600 rounded">
-            STOPPED
-        </div>
+<!-- Header Title -->
+<div class="cyber-header p-3 flex justify-between items-center shrink-0">
+    <div>
+        <h1 class="font-rajdhani font-bold text-lg text-cyan-400 tracking-wider flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+            ROBOT LOGIC SYSTEM
+        </h1>
+        <p class="text-[10px] text-gray-400 tracking-widest font-mono">AUTONOMOUS TACTICS SIMULATOR v4.8</p>
     </div>
-
-    <!-- Global Control Toolbar -->
-    <div class="p-2 grid grid-cols-2 gap-1.5 bg-black/40 border-b border-cyan-900/50 text-xs">
-        <button id="btn-toggle-battle" class="cyber-btn bg-cyan-600 hover:bg-cyan-500 text-black font-bold py-2 px-3 text-center text-xs tracking-wider uppercase font-rajdhani">
-            BATTLE START
-        </button>
-        <button id="btn-reset-battle" class="cyber-btn bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2 px-3 text-center text-xs tracking-wider uppercase font-rajdhani border border-gray-600">
-            RESET SIM
-        </button>
-        <button id="btn-toggle-tracking" class="cyber-btn bg-indigo-950 hover:bg-indigo-900 text-indigo-300 border border-indigo-500/40 py-1 px-2 text-[11px] font-mono">
-            TRACKING: <span id="txt-tracking" class="text-cyan-400 font-bold">ON</span>
-        </button>
-        <button id="btn-toggle-lead" class="cyber-btn bg-indigo-950 hover:bg-indigo-900 text-indigo-300 border border-indigo-500/40 py-1 px-2 text-[11px] font-mono">
-            LEAD AIM: <span id="txt-lead" class="text-cyan-400 font-bold">ON</span>
-        </button>
-    </div>
-
-    <!-- Unit Selector Tabs -->
-    <div class="flex border-b border-gray-800 bg-black/60 text-xs font-rajdhani font-bold">
-        <button id="tab-player" class="tab-btn active flex-1 py-2 text-center text-cyan-400 hover:text-cyan-200 transition">
-            BLUE ROBOT (PLAYER)
-        </button>
-        <button id="tab-enemy" class="tab-btn flex-1 py-2 text-center text-red-400 hover:text-red-200 transition">
-            RED ROBOT (ENEMY)
-        </button>
-    </div>
-
-    <!-- Scrollable Logic & Assembly Controls -->
-    <div class="flex-1 overflow-y-auto p-3 space-y-3 font-sans text-xs">
-
-        <!-- Unit Telemetry Card -->
-        <div class="bg-black/50 p-2.5 rounded border border-gray-800 space-y-2">
-            <div class="flex justify-between items-center font-mono text-[11px]">
-                <span id="txt-unit-title" class="font-bold text-cyan-400">BLUE ROBOT TELEMETRY</span>
-                <span id="txt-unit-los" class="text-emerald-400 text-[10px] bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-800">VISUAL: CLEAR</span>
-            </div>
-
-            <div>
-                <div class="flex justify-between text-[10px] font-mono text-gray-400 mb-0.5">
-                    <span>ARMOR (HP)</span>
-                    <span id="txt-hp-val">3000 / 3000</span>
-                </div>
-                <div class="w-full bg-gray-900 h-2 rounded overflow-hidden p-0.5 border border-gray-800">
-                    <div id="bar-hp" class="gauge-fill bg-cyan-400 h-full rounded-sm" style="width: 100%;"></div>
-                </div>
-            </div>
-
-            <div>
-                <div class="flex justify-between text-[10px] font-mono text-gray-400 mb-0.5">
-                    <span>ENERGY (EN)</span>
-                    <span id="txt-en-val" class="text-purple-400 font-bold">100 / 100</span>
-                </div>
-                <div class="w-full bg-gray-900 h-2 rounded overflow-hidden p-0.5 border border-gray-800">
-                    <div id="bar-en" class="gauge-fill bg-purple-500 h-full rounded-sm" style="width: 100%;"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Assembly Controls -->
-        <div class="bg-black/40 p-2.5 rounded border border-gray-800/80 space-y-2.5">
-            <div class="text-[11px] font-bold font-rajdhani text-gray-300 tracking-wider border-b border-gray-800 pb-1">
-                ASSEMBLY & SPECIFICATION
-            </div>
-
-            <div>
-                <label class="block text-[10px] font-mono text-gray-400 mb-1">FRAME TYPE (SPEED / EN / SENSOR)</label>
-                <div class="grid grid-cols-3 gap-1 text-[10px] font-mono">
-                    <button data-frame="LIGHT" class="btn-frame-opt py-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded text-center border border-gray-700">LIGHT</button>
-                    <button data-frame="MEDIUM" class="btn-frame-opt py-1 bg-cyan-900/60 text-cyan-300 rounded text-center border border-cyan-500 font-bold">MEDIUM</button>
-                    <button data-frame="HEAVY" class="btn-frame-opt py-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded text-center border border-gray-700">HEAVY</button>
-                </div>
-            </div>
-
-            <div>
-                <label class="block text-[10px] font-mono text-gray-400 mb-1">WEAPON TYPE (DAMAGE / RATE / DROPOFF)</label>
-                <div class="grid grid-cols-3 gap-1 text-[10px] font-mono">
-                    <button data-weapon="SHOTGUN" class="btn-weapon-opt py-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded text-center border border-gray-700">SHOTGUN</button>
-                    <button data-weapon="MACHINEGUN" class="btn-weapon-opt py-1 bg-cyan-900/60 text-cyan-300 rounded text-center border border-cyan-500 font-bold">M-GUN</button>
-                    <button data-weapon="RIFLE" class="btn-weapon-opt py-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded text-center border border-gray-700">RIFLE</button>
-                </div>
-            </div>
-
-            <div>
-                <div class="flex justify-between items-center text-[10px] font-mono text-gray-400 mb-1">
-                    <span>COMBAT RANGE THRESHOLD</span>
-                    <span id="txt-threshold-val" class="text-cyan-400 font-bold">12.0m</span>
-                </div>
-                <input id="slider-threshold" type="range" min="5" max="28" step="1" value="12" class="w-full">
-            </div>
-
-            <div>
-                <div class="flex justify-between items-center text-[10px] font-mono text-gray-400 mb-1">
-                    <span>OBSTACLE COVER TACTICS</span>
-                    <span id="txt-cover-status" class="text-gray-500 font-bold">OFF</span>
-                </div>
-                <button id="btn-toggle-cover" class="w-full py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded text-center border border-gray-700 font-mono text-[10px] transition">
-                    COVER USE: <span id="txt-cover-btn" class="text-gray-400 font-bold">OFF (NORMAL)</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- Customizable Priority Pipeline -->
-        <div class="space-y-2">
-            <div class="text-[11px] font-bold font-rajdhani text-gray-300 tracking-wider flex justify-between items-center border-b border-gray-800 pb-1">
-                <span>CUSTOMIZABLE PRIORITY PIPELINE</span>
-                <span id="txt-sensor-info" class="text-[9px] font-mono text-purple-400">SENSOR: 16m</span>
-            </div>
-            <p class="text-[10px] text-gray-400 font-mono">Click UP/DOWN to reorder evaluation priority (Top = Highest)</p>
-
-            <div id="priority-list-container" class="space-y-1.5 font-mono text-xs">
-                <!-- Dynamic Priority Chips -->
-            </div>
-        </div>
-
-        <!-- Terminal Log Window -->
-        <div class="bg-black/70 rounded p-2 border border-gray-800 font-mono text-[10px] space-y-1 h-28 overflow-y-auto" id="log-window">
-            <div class="text-gray-500">[SYSTEM] Robot Battle Engine initialized. Ready.</div>
-        </div>
-    </div>
-</aside>
-
-<!-- RIGHT AREA: 3D THREE.JS SIMULATION VIEWPORT -->
-<main class="flex-1 h-1/2 md:h-full relative bg-slate-950 overflow-hidden select-none">
-    <div id="canvas-container" class="w-full h-full cursor-grab active:cursor-grabbing"></div>
-    <div class="absolute inset-0 scanline opacity-40 pointer-events-none"></div>
-
-    <div class="absolute top-3 left-3 pointer-events-none space-y-1 font-mono text-xs">
-        <div class="bg-black/70 backdrop-blur border border-cyan-500/40 px-3 py-1.5 rounded text-cyan-300 font-bold flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
-            ACTIVE BEHAVIOR: <span id="hud-active-chip" class="text-white">IDLE</span>
-        </div>
-        <div id="hud-overheat-warn" class="hidden bg-red-950/90 border border-red-500 text-red-300 px-3 py-1 rounded font-bold animate-pulse">
-            &gt;&gt; OVERHEAT WARNING: ENERGY DEPLETED &lt;&lt;
-        </div>
-    </div>
-
-    <div class="absolute top-3 right-3 pointer-events-none bg-black/60 backdrop-blur border border-gray-800 p-2 rounded text-[10px] font-mono text-cyan-300/80 space-y-0.5">
-        <div><span class="text-white font-bold">ドラッグ:</span> カメラ回転</div>
-        <div><span class="text-white font-bold">右ドラッグ / 2本指:</span> 移動(パン)</div>
-        <div><span class="text-white font-bold">ホイール / ピンチ:</span> 拡大・縮小</div>
-    </div>
-
-    <div class="absolute bottom-3 right-3 pointer-events-none bg-black/60 backdrop-blur border border-gray-800 p-2 rounded text-[10px] font-mono text-gray-400 space-y-1">
-        <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 bg-blue-500 rounded-sm"></span> BLUE ROBOT (PLAYER)</div>
-        <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 bg-red-500 rounded-sm"></span> RED ROBOT (ENEMY)</div>
-        <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 bg-slate-700 border border-cyan-400 rounded-sm"></span> OBSTACLE (WALL / LOS BLOCK)</div>
-    </div>
-</main>
-
-<!-- POST-MATCH ANALYSIS MODAL (AAR) -->
-<div id="aar-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-    <div class="cyber-panel max-w-lg w-full p-6 rounded-lg border border-cyan-500 space-y-4 shadow-2xl animate-fade-in">
-        <div class="flex justify-between items-center border-b border-cyan-500/40 pb-3">
-            <div>
-                <h2 id="aar-title" class="font-rajdhani font-bold text-xl text-cyan-400 tracking-wider">AFTER ACTION REVIEW (AAR)</h2>
-                <p class="text-[11px] font-mono text-gray-400">AUTOMATED DEFEAT ANALYSIS & IMPROVEMENT PROPOSAL</p>
-            </div>
-            <span id="aar-badge" class="px-2.5 py-1 text-xs font-mono font-bold bg-red-950 text-red-400 border border-red-600 rounded">DEFEAT</span>
-        </div>
-
-        <div class="space-y-3 font-mono text-xs max-h-72 overflow-y-auto pr-1" id="aar-content"></div>
-
-        <div class="pt-2 flex justify-end">
-            <button id="btn-close-aar" class="cyber-btn bg-cyan-600 hover:bg-cyan-500 text-black font-bold py-2 px-6 text-xs uppercase font-rajdhani">
-                CONFIRM & RESTART
-            </button>
-        </div>
+    <div id="status-badge" class="px-2 py-0.5 text-[10px] font-mono font-bold bg-gray-800 text-gray-400 border border-gray-600 rounded">
+        STOPPED
     </div>
 </div>
 
-<script>
-    const WEAPON_SPECS = {
-        SHOTGUN: {
-            name: 'SHOTGUN', pellets: 5, spread: 0.18, baseDamage: 32, cooldown: 900, bulletSpeed: 0.38, bulletSize: 0.12, life: 140, color: 0xffaa00, dropoffStart: 4.0, dropoffRate: 0.077, minDropoff: 0.15
-        },
-        MACHINEGUN: {
-            name: 'MACHINEGUN', pellets: 1, spread: 0.04, baseDamage: 75, cooldown: 280, bulletSpeed: 0.35, bulletSize: 0.18, life: 140, color: 0x00f3ff, dropoffStart: 6.0, dropoffRate: 0.046, minDropoff: 0.25
-        },
-        RIFLE: {
-            name: 'RIFLE', pellets: 1, spread: 0.008, baseDamage: 145, cooldown: 600, bulletSpeed: 0.52, bulletSize: 0.28, life: 220, color: 0xff3366, dropoffStart: 12.0, dropoffRate: 0.012, minDropoff: 0.60
-        }
-    };
-
-    const FRAME_SPECS = {
-        LIGHT: { hp: 2200, maxEN: 90, enRecoveryRate: 0.35, sensorRange: 25.0, speed: 0.029 },
-        MEDIUM: { hp: 3000, maxEN: 100, enRecoveryRate: 0.28, sensorRange: 16.0, speed: 0.0225 },
-        HEAVY: { hp: 4200, maxEN: 120, enRecoveryRate: 0.22, sensorRange: 10.0, speed: 0.017 }
-    };
-
-    const state = {
-        isRunning: false,
-        isGameOver: false,
-        isAutoTracking: true,
-        activeTab: 'PLAYER',
-        gravity: 0.003,
-
-        telemetry: {
-            player: { distanceSum: 0, totalFrames: 0, totalShotsFired: 0, totalShotsHit: 0, timeInLOS: 0, timeOverheated: 0 },
-            enemy: { distanceSum: 0, totalFrames: 0, totalShotsFired: 0, totalShotsHit: 0, timeInLOS: 0, timeOverheated: 0 }
-        },
-
-        player: {
-            name: 'BLUE ROBOT', color: 0x0066ff, accent: 0x00f3ff, frameType: 'MEDIUM', weaponType: 'MACHINEGUN', useCover: false,
-            hp: 3000, maxHP: 3000, en: 100, maxEN: 100, enRecoveryRate: 0.28, isOverheated: false, sensorRange: 16, speed: 0.0225,
-            lastShot: 0, distanceThreshold: 12, isLeadAimEnabled: true, evadeState: 'NONE', lastHitTime: 0, lastAttackerPos: null,
-            sideBoostDir: 1, verticalVel: 0, lastDirSwitchTime: 0, zigzagPhase: 0, hasLOS: false, detectionInfo: null,
-            lastKnownPos: null, navigatingToLKP: false, patrolTargetPos: null, patrolTimer: 0,
-            prevPos: new THREE.Vector3(), velocity: new THREE.Vector3(), mesh: null,
-            priorities: [
-                { id: 'EVADE', name: 'EMERGENCY EVADE', active: true },
-                { id: 'COVER', name: 'OBSTACLE COVER', active: true },
-                { id: 'APPROACH', name: 'APPROACH & FLANK', active: true },
-                { id: 'RANGE_COMBAT', name: 'RANGE & COMBAT', active: true }
-            ]
-        },
-
-        enemy: {
-            name: 'RED ROBOT', color: 0xd91635, accent: 0xffaa00, frameType: 'MEDIUM', weaponType: 'MACHINEGUN', useCover: false,
-            hp: 3000, maxHP: 3000, en: 100, maxEN: 100, enRecoveryRate: 0.28, isOverheated: false, sensorRange: 16, speed: 0.0225,
-            lastShot: 0, distanceThreshold: 12, isLeadAimEnabled: true, evadeState: 'NONE', lastHitTime: 0, lastAttackerPos: null,
-            sideBoostDir: -1, verticalVel: 0, lastDirSwitchTime: 0, zigzagPhase: 0, hasLOS: false, detectionInfo: null,
-            lastKnownPos: null, navigatingToLKP: false, patrolTargetPos: null, patrolTimer: 0,
-            prevPos: new THREE.Vector3(), velocity: new THREE.Vector3(), mesh: null,
-            priorities: [
-                { id: 'EVADE', name: 'EMERGENCY EVADE', active: true },
-                { id: 'COVER', name: 'OBSTACLE COVER', active: true },
-                { id: 'APPROACH', name: 'APPROACH & FLANK', active: true },
-                { id: 'RANGE_COMBAT', name: 'RANGE & COMBAT', active: true }
-            ]
-        }
-    };
-
-    const camState = {
-        distance: 45, minDistance: 8, maxDistance: 95, yaw: 0, pitch: 0.52, minPitch: 0.05, maxPitch: 1.45,
-        target: new THREE.Vector3(0, 0, 0), isDragging: false, dragMode: 'ROTATE', lastMousePos: { x: 0, y: 0 }, touchStartDist: 0
-    };
-
-    const dom = {
-        btnToggleBattle: document.getElementById('btn-toggle-battle'),
-        btnResetBattle: document.getElementById('btn-reset-battle'),
-        btnToggleTracking: document.getElementById('btn-toggle-tracking'),
-        btnToggleLead: document.getElementById('btn-toggle-lead'),
-        btnToggleCover: document.getElementById('btn-toggle-cover'),
-        txtTracking: document.getElementById('txt-tracking'),
-        txtLead: document.getElementById('txt-lead'),
-        txtCoverStatus: document.getElementById('txt-cover-status'),
-        txtCoverBtn: document.getElementById('txt-cover-btn'),
-        tabPlayer: document.getElementById('tab-player'),
-        tabEnemy: document.getElementById('tab-enemy'),
-        statusBadge: document.getElementById('status-badge'),
-        txtUnitTitle: document.getElementById('txt-unit-title'),
-        txtUnitLOS: document.getElementById('txt-unit-los'),
-        txtHPVal: document.getElementById('txt-hp-val'),
-        txtENVal: document.getElementById('txt-en-val'),
-        barHP: document.getElementById('bar-hp'),
-        barEN: document.getElementById('bar-en'),
-        sliderThreshold: document.getElementById('slider-threshold'),
-        txtThresholdVal: document.getElementById('txt-threshold-val'),
-        txtSensorInfo: document.getElementById('txt-sensor-info'),
-        priorityListContainer: document.getElementById('priority-list-container'),
-        hudActiveChip: document.getElementById('hud-active-chip'),
-        hudOverheatWarn: document.getElementById('hud-overheat-warn'),
-        logWindow: document.getElementById('log-window'),
-        canvasContainer: document.getElementById('canvas-container'),
-        aarModal: document.getElementById('aar-modal'),
-        aarTitle: document.getElementById('aar-title'),
-        aarBadge: document.getElementById('aar-badge'),
-        aarContent: document.getElementById('aar-content'),
-        btnCloseAar: document.getElementById('btn-close-aar')
-    };
-
-    class SoundSynth {
-        constructor() { this.ctx = null; }
-        init() {
-            if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-            if (this.ctx.state === 'suspended') this.ctx.resume();
-        }
-        playClick() {
-            this.init();
-            const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
-            osc.type = 'sine'; osc.frequency.setValueAtTime(800, this.ctx.currentTime); osc.frequency.exponentialRampToValueAtTime(400, this.ctx.currentTime + 0.05);
-            gain.gain.setValueAtTime(0.1, this.ctx.currentTime); gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.05);
-            osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + 0.05);
-        }
-        playShot(type) {
-            this.init();
-            const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
-            if (type === 'SHOTGUN') {
-                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(180, this.ctx.currentTime); osc.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + 0.12);
-                gain.gain.setValueAtTime(0.2, this.ctx.currentTime); gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
-            } else if (type === 'RIFLE') {
-                osc.type = 'triangle'; osc.frequency.setValueAtTime(600, this.ctx.currentTime); osc.frequency.exponentialRampToValueAtTime(80, this.ctx.currentTime + 0.2);
-                gain.gain.setValueAtTime(0.25, this.ctx.currentTime); gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
-            } else {
-                osc.type = 'square'; osc.frequency.setValueAtTime(400, this.ctx.currentTime); osc.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + 0.08);
-                gain.gain.setValueAtTime(0.12, this.ctx.currentTime); gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
-            }
-            osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + (type === 'RIFLE' ? 0.2 : 0.12));
-        }
-        playHit() {
-            this.init();
-            const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
-            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(120, this.ctx.currentTime); osc.frequency.linearRampToValueAtTime(30, this.ctx.currentTime + 0.1);
-            gain.gain.setValueAtTime(0.2, this.ctx.currentTime); gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
-            osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + 0.1);
-        }
-        playExplosion() {
-            this.init();
-            const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
-            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(80, this.ctx.currentTime); osc.frequency.linearRampToValueAtTime(20, this.ctx.currentTime + 0.6);
-            gain.gain.setValueAtTime(0.35, this.ctx.currentTime); gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.6);
-            osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + 0.6);
-        }
-    }
-    const sound = new SoundSynth();
-
-    function addLog(msg, type = 'normal') {
-        const div = document.createElement('div');
-        const time = new Date().toLocaleTimeString('ja-JP', { hour12: false, minute: '2-digit', second: '2-digit' });
-        div.className = type === 'alert' ? 'text-orange-400 font-bold' : type === 'lost' ? 'text-purple-400 font-semibold' : 'text-gray-300';
-        div.textContent = `[${time}] ${msg}`;
-        dom.logWindow.appendChild(div);
-        dom.logWindow.scrollTop = dom.logWindow.scrollHeight;
-    }
-
-    let scene, camera, renderer;
-    let playerRobot, enemyRobot;
-    let bullets = [];
-    let particles = [];
-    let obstacles = [];
-    const raycaster = new THREE.Raycaster();
-
-    function init3D() {
-        scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x060911);
-        scene.fog = new THREE.FogExp2(0x060911, 0.015);
-
-        camera = new THREE.PerspectiveCamera(45, dom.canvasContainer.clientWidth / dom.canvasContainer.clientHeight, 0.1, 250);
-        
-        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-        renderer.setSize(dom.canvasContainer.clientWidth, dom.canvasContainer.clientHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        dom.canvasContainer.appendChild(renderer.domElement);
-
-        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-
-        const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
-        dirLight.position.set(30, 50, 20);
-        dirLight.castShadow = true;
-        dirLight.shadow.mapSize.width = 2048;
-        dirLight.shadow.mapSize.height = 2048;
-        dirLight.shadow.camera.near = 10;
-        dirLight.shadow.camera.far = 150;
-        dirLight.shadow.camera.left = -40;
-        dirLight.shadow.camera.right = 40;
-        dirLight.shadow.camera.top = 40;
-        dirLight.shadow.camera.bottom = -40;
-        scene.add(dirLight);
-
-        const pointLight = new THREE.PointLight(0x00f3ff, 1.5, 60);
-        pointLight.position.set(0, 15, 0);
-        scene.add(pointLight);
-
-        const gridHelper = new THREE.GridHelper(80, 40, 0x00f3ff, 0x1a2b4c);
-        gridHelper.position.y = -0.01;
-        scene.add(gridHelper);
-
-        const ground = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), new THREE.MeshPhongMaterial({ color: 0x0a0f1d, depthWrite: true }));
-        ground.rotation.x = -Math.PI / 2;
-        ground.receiveShadow = true;
-        scene.add(ground);
-
-        const fenceMesh = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(76, 3, 76)), new THREE.LineBasicMaterial({ color: 0xff0055, transparent: true, opacity: 0.5 }));
-        fenceMesh.position.y = 1.5;
-        scene.add(fenceMesh);
-
-        buildFieldObstacles();
-        rebuildRobotMesh(state.player);
-        rebuildRobotMesh(state.enemy);
-
-        setupCameraControls();
-        window.addEventListener('resize', onWindowResize);
-    }
-
-    function onWindowResize() {
-        if (!dom.canvasContainer || !renderer || !camera) return;
-        const w = dom.canvasContainer.clientWidth, h = dom.canvasContainer.clientHeight;
-        camera.aspect = w / h;
-        camera.updateProjectionMatrix();
-        renderer.setSize(w, h);
-    }
-
-    function resolveObstacleCollision(unitMesh, radius = 0.85) {
-        const pos = unitMesh.position;
-        pos.x = Math.max(-37.2, Math.min(37.2, pos.x));
-        pos.z = Math.max(-37.2, Math.min(37.2, pos.z));
-
-        for (let i = 0; i < obstacles.length; i++) {
-            const obs = obstacles[i];
-            const box = new THREE.Box3().setFromObject(obs);
-            const closestX = Math.max(box.min.x, Math.min(pos.x, box.max.x));
-            const closestZ = Math.max(box.min.z, Math.min(pos.z, box.max.z));
-            const dx = pos.x - closestX, dz = pos.z - closestZ;
-            const distSq = dx * dx + dz * dz;
-
-            if (distSq < radius * radius) {
-                const dist = Math.sqrt(distSq);
-                if (dist > 0.0001) {
-                    const overlap = radius - dist;
-                    pos.x += (dx / dist) * overlap;
-                    pos.z += (dz / dist) * overlap;
-                } else {
-                    pos.x += radius;
-                }
-            }
-        }
-        pos.x = Math.max(-37.2, Math.min(37.2, pos.x));
-        pos.z = Math.max(-37.2, Math.min(37.2, pos.z));
-    }
-
-    function buildFieldObstacles() {
-        obstacles.forEach(o => scene.remove(o));
-        obstacles = [];
-
-        const obsData = [
-            { x: 0, z: 8, w: 3.0, h: 4.5, d: 3.0 }, { x: 0, z: -8, w: 3.0, h: 4.5, d: 3.0 },
-            { x: -10, z: 0, w: 3.0, h: 4.5, d: 3.0 }, { x: 10, z: 0, w: 3.0, h: 4.5, d: 3.0 },
-            { x: -16, z: 16, w: 3.0, h: 4.5, d: 3.0 }, { x: 16, z: -16, w: 3.0, h: 4.5, d: 3.0 },
-            { x: -16, z: -16, w: 3.0, h: 4.5, d: 3.0 }, { x: 16, z: 16, w: 3.0, h: 4.5, d: 3.0 },
-            { x: -25, z: 6, w: 3.0, h: 4.0, d: 3.0 }, { x: 25, z: -6, w: 3.0, h: 4.0, d: 3.0 },
-            { x: -6, z: -25, w: 3.0, h: 4.5, d: 3.0 }, { x: 6, z: 25, w: 3.0, h: 4.5, d: 3.0 }
-        ];
-
-        const obsMat = new THREE.MeshPhongMaterial({ color: 0x162238, flatShading: true });
-        const edgeMat = new THREE.LineBasicMaterial({ color: 0x00f3ff, transparent: true, opacity: 0.35 });
-
-        obsData.forEach(d => {
-            const geo = new THREE.BoxGeometry(d.w, d.h, d.d);
-            const mesh = new THREE.Mesh(geo, obsMat);
-            mesh.position.set(d.x, d.h / 2, d.z);
-            mesh.castShadow = true; mesh.receiveShadow = true;
-            mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), edgeMat));
-            scene.add(mesh);
-            obstacles.push(mesh);
-        });
-    }
-
-    function createRobotModel(mainHex, accentHex, frameType) {
-        const group = new THREE.Group();
-        const mainMat = new THREE.MeshPhongMaterial({ color: mainHex, flatShading: true });
-        const accentMat = new THREE.MeshPhongMaterial({ color: accentHex, emissive: accentHex, emissiveIntensity: 0.3 });
-        const darkMat = new THREE.MeshPhongMaterial({ color: 0x111622 });
-
-        let scale = frameType === 'LIGHT' ? 0.82 : (frameType === 'HEAVY' ? 1.25 : 1.0);
-
-        const torso = new THREE.Mesh(new THREE.BoxGeometry(1.2 * scale, 1.4 * scale, 1.0 * scale), mainMat);
-        torso.position.y = 1.4 * scale; torso.castShadow = true; group.add(torso);
-
-        const head = new THREE.Mesh(new THREE.BoxGeometry(0.6 * scale, 0.4 * scale, 0.6 * scale), darkMat);
-        head.position.set(0, 2.2 * scale, 0.1 * scale); group.add(head);
-
-        const visor = new THREE.Mesh(new THREE.BoxGeometry(0.5 * scale, 0.12 * scale, 0.2 * scale), accentMat);
-        visor.position.set(0, 2.2 * scale, 0.35 * scale); group.add(visor);
-
-        const legGeo = new THREE.BoxGeometry(0.4 * scale, 1.2 * scale, 0.5 * scale);
-        const leftLeg = new THREE.Mesh(legGeo, mainMat); leftLeg.position.set(-0.5 * scale, 0.6 * scale, 0); leftLeg.castShadow = true;
-        const rightLeg = new THREE.Mesh(legGeo, mainMat); rightLeg.position.set(0.5 * scale, 0.6 * scale, 0); rightLeg.castShadow = true;
-        group.add(leftLeg); group.add(rightLeg);
-
-        const shoulderGeo = new THREE.BoxGeometry(0.4 * scale, 0.4 * scale, 0.6 * scale);
-        const leftSh = new THREE.Mesh(shoulderGeo, accentMat); leftSh.position.set(-0.85 * scale, 1.7 * scale, 0);
-        const rightSh = new THREE.Mesh(shoulderGeo, accentMat); rightSh.position.set(0.85 * scale, 1.7 * scale, 0);
-        group.add(leftSh); group.add(rightSh);
-
-        const gun = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 1.2 * scale), darkMat);
-        gun.rotation.x = Math.PI / 2; gun.position.set(0.85 * scale, 1.4 * scale, 0.6 * scale); group.add(gun);
-
-        return group;
-    }
-
-    function rebuildRobotMesh(unit) {
-        const isPlayer = unit === state.player;
-        const oldMesh = isPlayer ? playerRobot : enemyRobot;
-        if (oldMesh) scene.remove(oldMesh);
-
-        const newMesh = createRobotModel(unit.color, unit.accent, unit.frameType);
-        newMesh.position.copy(isPlayer ? new THREE.Vector3(-18, 0, 0) : new THREE.Vector3(18, 0, 0));
-        if (!isPlayer) newMesh.rotation.y = Math.PI;
-
-        scene.add(newMesh);
-        if (isPlayer) playerRobot = newMesh; else enemyRobot = newMesh;
-        unit.mesh = newMesh;
-    }
-
-    function setupCameraControls() {
-        const container = dom.canvasContainer;
-        container.addEventListener('contextmenu', e => e.preventDefault());
-        container.addEventListener('mousedown', e => {
-            camState.isDragging = true;
-            camState.dragMode = (e.button === 2) ? 'PAN' : 'ROTATE';
-            camState.lastMousePos = { x: e.clientX, y: e.clientY };
-        });
-
-        window.addEventListener('mousemove', e => {
-            if (!camState.isDragging) return;
-            const dx = e.clientX - camState.lastMousePos.x, dy = e.clientY - camState.lastMousePos.y;
-            camState.lastMousePos = { x: e.clientX, y: e.clientY };
-
-            if (camState.dragMode === 'ROTATE') {
-                camState.yaw -= dx * 0.008;
-                camState.pitch = Math.max(camState.minPitch, Math.min(camState.maxPitch, camState.pitch + dy * 0.008));
-            } else if (camState.dragMode === 'PAN') {
-                if (state.isAutoTracking && (Math.abs(dx) > 2 || Math.abs(dy) > 2)) {
-                    state.isAutoTracking = false;
-                    dom.txtTracking.textContent = 'OFF'; dom.txtTracking.className = 'text-gray-500 font-bold';
-                }
-                const cosY = Math.cos(camState.yaw), sinY = Math.sin(camState.yaw), speed = camState.distance * 0.0018;
-                camState.target.x -= (dx * cosY + dy * sinY * Math.sin(camState.pitch)) * speed;
-                camState.target.z -= (-dx * sinY + dy * cosY * Math.sin(camState.pitch)) * speed;
-            }
-        });
-
-        window.addEventListener('mouseup', () => camState.isDragging = false);
-        container.addEventListener('wheel', e => {
-            e.preventDefault();
-            camState.distance = Math.max(camState.minDistance, Math.min(camState.maxDistance, camState.distance + e.deltaY * 0.04));
-        }, { passive: false });
-
-        container.addEventListener('touchstart', e => {
-            if (e.touches.length === 1) {
-                camState.isDragging = true; camState.dragMode = 'ROTATE';
-                camState.lastMousePos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-            } else if (e.touches.length === 2) {
-                camState.isDragging = false;
-                const dx = e.touches[0].clientX - e.touches[1].clientX, dy = e.touches[0].clientY - e.touches[1].clientY;
-                camState.touchStartDist = Math.sqrt(dx * dx + dy * dy);
-            }
-        });
-
-        container.addEventListener('touchmove', e => {
-            if (e.touches.length === 2 && camState.touchStartDist > 0) {
-                const dx = e.touches[0].clientX - e.touches[1].clientX, dy = e.touches[0].clientY - e.touches[1].clientY;
-                const dist = Math.sqrt(dx * dx + dy * dy), delta = camState.touchStartDist - dist;
-                camState.touchStartDist = dist;
-                camState.distance = Math.max(camState.minDistance, Math.min(camState.maxDistance, camState.distance + delta * 0.1));
-            }
-        });
-
-        container.addEventListener('touchend', () => { camState.isDragging = false; camState.touchStartDist = 0; });
-    }
-
-    function checkTargetDetection(unitMesh, targetMesh, sensorRange) {
-        const origin = unitMesh.position.clone().add(new THREE.Vector3(0, 1.2, 0));
-        const targetPos = targetMesh.position.clone().add(new THREE.Vector3(0, 1.2, 0));
-        const dist = origin.distanceTo(targetPos);
-
-        const isSensor = dist <= sensorRange;
-        let isVision = false;
-
-        if (dist <= 40.0) {
-            const forward = new THREE.Vector3(0, 0, 1).applyQuaternion(unitMesh.quaternion).normalize();
-            const dirToTarget = new THREE.Vector3().subVectors(targetPos, origin).normalize();
-            if (forward.angleTo(dirToTarget) <= THREE.MathUtils.degToRad(60)) {
-                raycaster.set(origin, dirToTarget);
-                raycaster.far = dist;
-                if (raycaster.intersectObjects(obstacles).length === 0) isVision = true;
-            }
-        }
-
-        return { hasTarget: isVision || isSensor, isVision, isSensor, dist };
-    }
-
-    function getCoverAndPeekPositions(unitPos, enemyPos) {
-        let bestCover = null, bestPeek = null, minDistSq = Infinity;
-        for (let i = 0; i < obstacles.length; i++) {
-            const obs = obstacles[i];
-            const box = new THREE.Box3().setFromObject(obs);
-            const center = new THREE.Vector3(); box.getCenter(center); center.y = 0;
-            const radius = Math.max(box.max.x - box.min.x, box.max.z - box.min.z) * 0.5;
-
-            const dirFromEnemy = new THREE.Vector3().subVectors(center, enemyPos); dirFromEnemy.y = 0; dirFromEnemy.normalize();
-            const cover = center.clone().addScaledVector(dirFromEnemy, radius + 2.0);
-            const right = new THREE.Vector3(-dirFromEnemy.z, 0, dirFromEnemy.x);
-            const peek = unitPos.distanceTo(center.clone().addScaledVector(right, radius + 2.8)) < unitPos.distanceTo(center.clone().addScaledVector(right, -(radius + 2.8))) ? center.clone().addScaledVector(right, radius + 2.8) : center.clone().addScaledVector(right, -(radius + 2.8));
-
-            const d = unitPos.distanceTo(cover);
-            if (d < minDistSq) { minDistSq = d; bestCover = cover; bestPeek = peek; }
-        }
-        return { coverPoint: bestCover, peekPoint: bestPeek };
-    }
-
-    function getBlockingObstacleBetween(posA, posB) {
-        const dir = new THREE.Vector3().subVectors(posB, posA);
-        const dist = dir.length();
-        dir.normalize();
-        raycaster.set(posA, dir);
-        raycaster.far = dist;
-        const intersects = raycaster.intersectObjects(obstacles);
-        if (intersects.length > 0) return intersects[0].object;
-        return null;
-    }
-
-    function calculateLeadTargetPos(shooterMesh, targetMesh, targetVel, bulletSpeed) {
-        const muzzle = shooterMesh.position.clone().add(new THREE.Vector3(0, 1.2, 0));
-        const targetCurrent = targetMesh.position.clone().add(new THREE.Vector3(0, 1.2, 0));
-        let timeToHit = muzzle.distanceTo(targetCurrent) / bulletSpeed;
-        return targetCurrent.clone().addScaledVector(targetVel, timeToHit);
-    }
-
-    function spawnWeaponBullets(shooterMesh, targetMesh, unitState, isPlayer) {
-        const wSpec = WEAPON_SPECS[unitState.weaponType];
-        sound.playShot(wSpec.name);
-        if (isPlayer) state.telemetry.player.totalShotsFired += wSpec.pellets; else state.telemetry.enemy.totalShotsFired += wSpec.pellets;
-
-        const muzzle = shooterMesh.position.clone().add(new THREE.Vector3(0, 1.2, 0));
-        const targetVel = isPlayer ? state.enemy.velocity : state.player.velocity;
-        const aimPos = unitState.isLeadAimEnabled ? calculateLeadTargetPos(shooterMesh, targetMesh, targetVel, wSpec.bulletSpeed) : targetMesh.position.clone().add(new THREE.Vector3(0, 1.2, 0));
-        const baseDir = new THREE.Vector3().subVectors(aimPos, muzzle).normalize();
-
-        for (let i = 0; i < wSpec.pellets; i++) {
-            const spreadDir = baseDir.clone().add(new THREE.Vector3((Math.random() - 0.5) * wSpec.spread, (Math.random() - 0.5) * wSpec.spread * 0.5, (Math.random() - 0.5) * wSpec.spread)).normalize();
-            const mesh = new THREE.Mesh(new THREE.SphereGeometry(wSpec.bulletSize, 8, 8), new THREE.MeshBasicMaterial({ color: wSpec.color }));
-            mesh.position.copy(muzzle); scene.add(mesh);
-            bullets.push({ mesh, dir: spreadDir, speed: wSpec.bulletSpeed, life: wSpec.life, isPlayerBullet: isPlayer, weaponSpec: wSpec, startPos: muzzle.clone() });
-        }
-    }
-
-    function consumeEN(unitState, amount) {
-        if (unitState.isOverheated) return;
-        unitState.en = Math.max(0, unitState.en - amount);
-        if (unitState.en <= 0) {
-            unitState.isOverheated = true;
-            if (unitState === state.player) { state.telemetry.player.timeOverheated++; addLog(`BLUE ROBOT OVERHEAT! EN DEPLETED.`, 'alert'); }
-            else { state.telemetry.enemy.timeOverheated++; addLog(`RED ROBOT OVERHEAT! EN DEPLETED.`, 'alert'); }
-        } else if (unitState.isOverheated) {
-            if (unitState === state.player) state.telemetry.player.timeOverheated++; else state.telemetry.enemy.timeOverheated++;
-        }
-    }
-
-    function recoverEN(unitState) {
-        if (unitState.isOverheated) {
-            unitState.en += unitState.enRecoveryRate * 0.6;
-            if (unitState.en >= unitState.maxEN * 0.35) unitState.isOverheated = false;
-        } else {
-            unitState.en = Math.min(unitState.maxEN, unitState.en + unitState.enRecoveryRate);
-        }
-    }
-
-    function smoothRotateTowards(unitMesh, targetPos, speed) {
-        const dir = new THREE.Vector3().subVectors(targetPos, unitMesh.position); dir.y = 0;
-        if (dir.lengthSq() < 0.0001) return; dir.normalize();
-        const targetY = Math.atan2(dir.x, dir.z), currY = unitMesh.rotation.y;
-        let diff = targetY - currY;
-        while (diff < -Math.PI) diff += Math.PI * 2; while (diff > Math.PI) diff -= Math.PI * 2;
-        const rotSpeed = speed;
-        if (Math.abs(diff) < rotSpeed) unitMesh.rotation.y = targetY; else unitMesh.rotation.y += Math.sign(diff) * rotSpeed;
-    }
-
-    function evaluateRobotLogicForUnit(unitState, unitMesh, targetMesh, now) {
-        const isPlayer = unitState === state.player;
-        const wSpec = WEAPON_SPECS[unitState.weaponType];
-        const distance = unitMesh.position.distanceTo(targetMesh.position);
-
-        if (isPlayer) { state.telemetry.player.totalFrames++; state.telemetry.player.distanceSum += distance; }
-        else { state.telemetry.enemy.totalFrames++; state.telemetry.enemy.distanceSum += distance; }
-
-        const detection = checkTargetDetection(unitMesh, targetMesh, unitState.sensorRange);
-        unitState.hasLOS = detection.isVision;
-        unitState.detectionInfo = detection;
-
-        if (detection.isVision) {
-            if (isPlayer) state.telemetry.player.timeInLOS++; else state.telemetry.enemy.timeInLOS++;
-            unitState.lastKnownPos = targetMesh.position.clone();
-            unitState.navigatingToLKP = false;
-        }
-
-        const timeSinceHit = now - unitState.lastHitTime;
-        const isEvading = timeSinceHit < 1500;
-
-        let executedAction = 'IDLE';
-
-        for (const pri of unitState.priorities) {
-            if (!pri.active) continue;
-
-            if (pri.id === 'EVADE' && isEvading) {
-                executedAction = 'EVADE';
-                const isReady = (now - unitState.lastShot) >= wSpec.cooldown;
-
-                if (unitState.useCover) {
-                    const coverData = getCoverAndPeekPositions(unitMesh.position, targetMesh.position);
-                    if (coverData && coverData.coverPoint && !(isReady && detection.isVision)) {
-                        const moveDir = new THREE.Vector3().subVectors(coverData.coverPoint, unitMesh.position).normalize(); moveDir.y = 0;
-                        smoothRotateTowards(unitMesh, targetMesh.position, unitState.speed);
-                        unitMesh.position.addScaledVector(moveDir, unitState.speed * 1.35);
-                        if (!unitState.isOverheated) consumeEN(unitState, 0.12);
-                    } else if (coverData && coverData.peekPoint && isReady && detection.isVision) {
-                        const moveDir = new THREE.Vector3().subVectors(coverData.peekPoint, unitMesh.position).normalize(); moveDir.y = 0;
-                        smoothRotateTowards(unitMesh, targetMesh.position, unitState.speed);
-                        unitMesh.position.addScaledVector(moveDir, unitState.speed);
-                        if (detection.isVision && isReady) {
-                            spawnWeaponBullets(unitMesh, targetMesh, unitState, isPlayer); unitState.lastShot = now;
-                        }
-                    }
-                } else {
-                    if (unitState.lastAttackerPos) smoothRotateTowards(unitMesh, unitState.lastAttackerPos, unitState.speed);
-                    if (now - (unitState.lastDirSwitchTime || 0) > 350 + Math.random() * 300) { unitState.sideBoostDir *= -1; unitState.lastDirSwitchTime = now; }
-                    const right = new THREE.Vector3(1, 0, 0).applyQuaternion(unitMesh.quaternion);
-                    const spd = unitState.isOverheated ? unitState.speed * 0.4 : unitState.speed * 1.3;
-                    unitMesh.position.add(right.multiplyScalar(unitState.sideBoostDir * spd));
-                    if (!unitState.isOverheated) consumeEN(unitState, 0.12);
-
-                    if (detection.isVision && isReady) {
-                        spawnWeaponBullets(unitMesh, targetMesh, unitState, isPlayer); unitState.lastShot = now;
-                    }
-                }
-                break;
-            }
-
-            if (pri.id === 'COVER' && unitState.useCover && !detection.isVision) {
-                executedAction = 'COVER_SEARCH';
-                const coverData = getCoverAndPeekPositions(unitMesh.position, targetMesh.position);
-                if (coverData && coverData.coverPoint) {
-                    const moveDir = new THREE.Vector3().subVectors(coverData.coverPoint, unitMesh.position).normalize(); moveDir.y = 0;
-                    smoothRotateTowards(unitMesh, targetMesh.position, unitState.speed);
-                    unitMesh.position.addScaledVector(moveDir, unitState.speed);
-                    if (!unitState.isOverheated) consumeEN(unitState, 0.05);
-                }
-                break;
-            }
-
-            if (pri.id === 'APPROACH' && (!detection.isVision && !detection.isSensor)) {
-                executedAction = 'RECON_PATROL';
-                if (unitState.lastKnownPos) {
-                    const moveDir = new THREE.Vector3().subVectors(unitState.lastKnownPos, unitMesh.position).normalize(); moveDir.y = 0;
-                    unitMesh.position.addScaledVector(moveDir, unitState.speed);
-                    smoothRotateTowards(unitMesh, unitState.lastKnownPos, unitState.speed);
-                } else {
-                    unitState.patrolTimer++;
-                    if (!unitState.patrolTargetPos || unitMesh.position.distanceTo(unitState.patrolTargetPos) < 2.5 || unitState.patrolTimer > 280) {
-                        unitState.patrolTargetPos = new THREE.Vector3((Math.random() - 0.5) * 55, 0, (Math.random() - 0.5) * 55);
-                        unitState.patrolTimer = 0;
-                    }
-                    const pDir = new THREE.Vector3().subVectors(unitState.patrolTargetPos, unitMesh.position).normalize(); pDir.y = 0;
-                    unitMesh.position.addScaledVector(pDir, unitState.speed * 0.85);
-                    smoothRotateTowards(unitMesh, unitState.patrolTargetPos, unitState.speed);
-                }
-                break;
-            }
-
-            if (pri.id === 'APPROACH' && detection.isSensor && !detection.isVision) {
-                executedAction = 'FLANK_OBSTACLE';
-                smoothRotateTowards(unitMesh, targetMesh.position, unitState.speed);
-                const moveDir = new THREE.Vector3().subVectors(targetMesh.position, unitMesh.position).normalize(); moveDir.y = 0;
-                unitMesh.position.addScaledVector(moveDir, unitState.speed * 0.95);
-                break;
-            }
-
-            if (pri.id === 'APPROACH' && distance >= unitState.distanceThreshold) {
-                executedAction = 'APPROACH_SLALOM';
-                const blockingObs = getBlockingObstacleBetween(unitMesh.position, targetMesh.position);
-                smoothRotateTowards(unitMesh, targetMesh.position, unitState.speed);
-                
-                if (blockingObs) {
-                    unitState.zigzagPhase += 0.06;
-                    const forward = new THREE.Vector3(0, 0, 1).applyQuaternion(unitMesh.quaternion).normalize();
-                    const right = new THREE.Vector3(1, 0, 0).applyQuaternion(unitMesh.quaternion);
-                    const slalomDir = forward.clone().addScaledVector(right, Math.sin(unitState.zigzagPhase) * 1.2).normalize();
-                    unitMesh.position.addScaledVector(slalomDir, unitState.speed * 1.1);
-                    if (!unitState.isOverheated) consumeEN(unitState, 0.06);
-                } else {
-                    unitState.zigzagPhase += 0.08;
-                    const right = new THREE.Vector3(1, 0, 0).applyQuaternion(unitMesh.quaternion);
-                    const look = new THREE.Vector3(0, 0, 1).applyQuaternion(unitMesh.quaternion).normalize();
-                    const moveDir = look.clone().addScaledVector(right, Math.sin(unitState.zigzagPhase) * 0.5).normalize();
-                    unitMesh.position.addScaledVector(moveDir, unitState.speed);
-                    if (!unitState.isOverheated) consumeEN(unitState, 0.04);
-                }
-                if (detection.isVision && now - unitState.lastShot >= wSpec.cooldown) {
-                    spawnWeaponBullets(unitMesh, targetMesh, unitState, isPlayer); unitState.lastShot = now;
-                }
-                break;
-            }
-
-            if (pri.id === 'RANGE_COMBAT') {
-                executedAction = 'RANGE_COMBAT';
-                if (distance >= unitState.distanceThreshold) {
-                    smoothRotateTowards(unitMesh, targetMesh.position, unitState.speed);
-                    unitState.zigzagPhase += 0.08;
-                    const right = new THREE.Vector3(1, 0, 0).applyQuaternion(unitMesh.quaternion);
-                    const look = new THREE.Vector3(0, 0, 1).applyQuaternion(unitMesh.quaternion).normalize();
-                    const moveDir = look.clone().addScaledVector(right, Math.sin(unitState.zigzagPhase) * 0.4).normalize();
-                    unitMesh.position.addScaledVector(moveDir, unitState.speed);
-                    if (!unitState.isOverheated) consumeEN(unitState, 0.04);
-                    if (detection.isVision && now - unitState.lastShot >= wSpec.cooldown) {
-                        spawnWeaponBullets(unitMesh, targetMesh, unitState, isPlayer); unitState.lastShot = now;
-                    }
-                } else {
-                    smoothRotateTowards(unitMesh, targetMesh.position, unitState.speed);
-                    const coverData = unitState.useCover ? getCoverAndPeekPositions(unitMesh.position, targetMesh.position) : null;
-                    const isReady = (now - unitState.lastShot) >= wSpec.cooldown;
-                    if (coverData && coverData.coverPoint && !isReady) {
-                        if (unitMesh.position.distanceTo(coverData.coverPoint) > 0.3) {
-                            const moveDir = new THREE.Vector3().subVectors(coverData.coverPoint, unitMesh.position).normalize(); moveDir.y = 0;
-                            unitMesh.position.addScaledVector(moveDir, unitState.speed);
-                        }
-                    } else if (coverData && coverData.peekPoint && isReady) {
-                        if (unitMesh.position.distanceTo(coverData.peekPoint) > 0.3) {
-                            const moveDir = new THREE.Vector3().subVectors(coverData.peekPoint, unitMesh.position).normalize(); moveDir.y = 0;
-                            unitMesh.position.addScaledVector(moveDir, unitState.speed);
-                        }
-                        if (detection.isVision) { spawnWeaponBullets(unitMesh, targetMesh, unitState, isPlayer); unitState.lastShot = now; }
-                    } else {
-                        const look = new THREE.Vector3(0, 0, 1).applyQuaternion(unitMesh.quaternion).normalize();
-                        unitMesh.position.addScaledVector(look, -unitState.speed * 0.75);
-                        if (detection.isVision && now - unitState.lastShot >= wSpec.cooldown) {
-                            spawnWeaponBullets(unitMesh, targetMesh, unitState, isPlayer); unitState.lastShot = now;
-                        }
-                    }
-                }
-                break;
-            }
-        }
-
-        resolveObstacleCollision(unitMesh, 0.85);
-        recoverEN(unitState);
-
-        const activeUnit = state.activeTab === 'PLAYER' ? state.player : state.enemy;
-        if (unitState === activeUnit) {
-            dom.hudActiveChip.textContent = `${unitState.name} ACTIVE: ${executedAction}`;
-            if (unitState.isOverheated) dom.hudOverheatWarn.classList.remove('hidden'); else dom.hudOverheatWarn.classList.add('hidden');
-        }
-    }
-
-    function updateBulletsAndParticles() {
-        for (let i = bullets.length - 1; i >= 0; i--) {
-            const b = bullets[i];
-            b.mesh.position.addScaledVector(b.dir, b.speed); b.life--;
-            const targetUnit = b.isPlayerBullet ? state.enemy : state.player;
-            const dist = b.mesh.position.distanceTo(targetUnit.mesh.position.clone().add(new THREE.Vector3(0, 1.2, 0)));
-
-            if (dist < 1.3) {
-                if (b.isPlayerBullet) state.telemetry.player.totalShotsHit++; else state.telemetry.enemy.totalShotsHit++;
-                const flightDist = b.startPos.distanceTo(b.mesh.position);
-                let dropoff = flightDist > b.weaponSpec.dropoffStart ? Math.max(b.weaponSpec.minDropoff, 1.0 - (flightDist - b.weaponSpec.dropoffStart) * b.weaponSpec.dropoffRate) : 1.0;
-                const dmg = Math.max(3, Math.floor(b.weaponSpec.baseDamage * (dropoff + (Math.random() - 0.5) * 0.12)));
-
-                targetUnit.hp = Math.max(0, targetUnit.hp - dmg);
-                sound.playHit();
-                targetUnit.lastAttackerPos = b.startPos.clone();
-                targetUnit.lastHitTime = performance.now();
-
-                scene.remove(b.mesh); bullets.splice(i, 1); continue;
-            }
-
-            let hitObs = false;
-            for (let o of obstacles) {
-                if (new THREE.Box3().setFromObject(o).containsPoint(b.mesh.position)) { hitObs = true; break; }
-            }
-            if (hitObs || b.life <= 0) { scene.remove(b.mesh); bullets.splice(i, 1); }
-        }
-
-        for (let i = particles.length - 1; i >= 0; i--) {
-            const p = particles[i]; p.mesh.position.add(p.vel); p.life--; p.mesh.material.opacity = p.life / p.maxLife;
-            if (p.life <= 0) { scene.remove(p.mesh); particles.splice(i, 1); }
-        }
-    }
-
-    function analyzeBattleDefeat(loser, winner, telemetry) {
-        let diagnosis = [];
-        const avgDist = telemetry.distanceSum / (telemetry.totalFrames || 1);
-        if (loser.weaponType === 'SHOTGUN' && avgDist > 12.0) {
-            diagnosis.push({ title: '距離・アセンブルミスマッチ', message: 'ショットガン装備に対し、平均交戦距離が遠すぎました。接近閾値を下げるか武器を変更してください。' });
-        }
-        if (telemetry.timeOverheated > 90) {
-            diagnosis.push({ title: 'エネルギーマネジメント破綻', message: `EN枯渇・オーバーヒートが計 ${telemetry.timeOverheated} フレーム持続しました。過剰なブーストを控えてください。` });
-        }
-        if (telemetry.timeInLOS < telemetry.totalFrames * 0.3) {
-            diagnosis.push({ title: '視線・索敵ロスの長期化', message: '敵機を視界に捉えていた時間が全戦闘時間の30%未満でした。' });
-        }
-        if (diagnosis.length === 0) {
-            diagnosis.push({ title: '純粋な火力・耐久力負け', message: '戦術的エラーは少ないですが、秒間ダメージ（DPS）や耐久力で押し負けました。' });
-        }
-        return diagnosis;
-    }
-
-    function showAARModal(loser, winner) {
-        const telemetry = loser === state.player ? state.telemetry.player : state.telemetry.enemy;
-        const diagnoses = analyzeBattleDefeat(loser, winner, telemetry);
-        dom.aarTitle.textContent = `${loser.name} DEFEATED - AAR REPORT`;
-        dom.aarBadge.textContent = `${loser.name} LOSES`;
-
-        let html = `<div class="p-2 bg-black/60 rounded border border-gray-800 text-gray-300 mb-3">勝者: <span class="text-cyan-400 font-bold">${winner.name}</span> | 敗者: <span class="text-red-400 font-bold">${loser.name}</span></div>`;
-        diagnoses.forEach((d, idx) => {
-            html += `<div class="p-2.5 mb-2 bg-slate-900/80 rounded border border-cyan-500/30 space-y-1"><div class="text-orange-400 font-bold">[0${idx + 1}] ${d.title}</div><div class="text-gray-300 text-[11px]">${d.message}</div></div>`;
-        });
-        dom.aarContent.innerHTML = html;
-        dom.aarModal.classList.remove('hidden');
-    }
-
-    function renderPriorityListUI(unit) {
-        dom.priorityListContainer.innerHTML = '';
-        unit.priorities.forEach((pri, index) => {
-            const div = document.createElement('div');
-            div.className = 'flex items-center justify-between p-1.5 bg-black/60 rounded border border-gray-800 text-[11px]';
-            div.innerHTML = `
-                <div class="flex items-center gap-2">
-                    <span class="text-cyan-400 font-bold">0${index + 1}</span>
-                    <span class="${pri.active ? 'text-white' : 'text-gray-500 line-through'}">${pri.name}</span>
-                </div>
-                <div class="flex items-center gap-1">
-                    <button onclick="movePriority(${index}, -1)" class="px-1.5 py-0.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded text-[10px]">▲</button>
-                    <button onclick="movePriority(${index}, 1)" class="px-1.5 py-0.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded text-[10px]">▼</button>
-                    <button onclick="togglePriority(${index})" class="px-2 py-0.5 ${pri.active ? 'bg-cyan-900 text-cyan-300 border border-cyan-600' : 'bg-gray-800 text-gray-500'} rounded text-[10px]">${pri.active ? 'ON' : 'OFF'}</button>
-                </div>
-            `;
-            dom.priorityListContainer.appendChild(div);
-        });
-    }
-
-    window.movePriority = function(index, direction) {
-        sound.playClick();
-        const unit = state.activeTab === 'PLAYER' ? state.player : state.enemy;
-        const newIndex = index + direction;
-        if (newIndex < 0 || newIndex >= unit.priorities.length) return;
-        const temp = unit.priorities[index];
-        unit.priorities[index] = unit.priorities[newIndex];
-        unit.priorities[newIndex] = temp;
-        renderPriorityListUI(unit);
-    };
-
-    window.togglePriority = function(index) {
-        sound.playClick();
-        const unit = state.activeTab === 'PLAYER' ? state.player : state.enemy;
-        unit.priorities[index].active = !unit.priorities[index].active;
-        renderPriorityListUI(unit);
-    };
-
-    function switchTab(tabName) {
-        sound.playClick();
-        state.activeTab = tabName;
-        if (tabName === 'PLAYER') {
-            dom.tabPlayer.className = 'tab-btn active flex-1 py-2 text-center text-cyan-400';
-            dom.tabEnemy.className = 'tab-btn flex-1 py-2 text-center text-gray-500';
-            dom.txtUnitTitle.textContent = 'BLUE ROBOT TELEMETRY'; dom.txtUnitTitle.className = 'font-bold text-cyan-400';
-        } else {
-            dom.tabPlayer.className = 'tab-btn flex-1 py-2 text-center text-gray-500';
-            dom.tabEnemy.className = 'tab-btn active flex-1 py-2 text-center text-red-400';
-            dom.txtUnitTitle.textContent = 'RED ROBOT TELEMETRY'; dom.txtUnitTitle.className = 'font-bold text-red-400';
-        }
-        syncAssemblyUIForUnit(tabName === 'PLAYER' ? state.player : state.enemy);
-    }
-
-    function syncAssemblyUIForUnit(unit) {
-        dom.sliderThreshold.value = unit.distanceThreshold;
-        dom.txtThresholdVal.textContent = `${unit.distanceThreshold}.0m`;
-        dom.txtSensorInfo.textContent = `SENSOR: ${unit.sensorRange}m`;
-
-        if (unit.useCover) {
-            dom.txtCoverStatus.textContent = 'ON (AGGRESSIVE)'; dom.txtCoverStatus.className = 'text-cyan-400 font-bold';
-            dom.txtCoverBtn.textContent = 'ON (AGGRESSIVE)'; dom.btnToggleCover.className = 'w-full py-1.5 bg-cyan-900/60 text-cyan-300 rounded text-center border border-cyan-500 font-mono text-[10px] transition';
-        } else {
-            dom.txtCoverStatus.textContent = 'OFF'; dom.txtCoverStatus.className = 'text-gray-500 font-bold';
-            dom.txtCoverBtn.textContent = 'OFF (NORMAL)'; dom.btnToggleCover.className = 'w-full py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded text-center border border-gray-700 font-mono text-[10px] transition';
-        }
-
-        document.querySelectorAll('.btn-frame-opt').forEach(btn => {
-            btn.className = btn.dataset.frame === unit.frameType ? 'btn-frame-opt py-1 bg-cyan-900/60 text-cyan-300 rounded text-center border border-cyan-500 font-bold' : 'btn-frame-opt py-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded text-center border border-gray-700';
-        });
-        document.querySelectorAll('.btn-weapon-opt').forEach(btn => {
-            btn.className = btn.dataset.weapon === unit.weaponType ? 'btn-weapon-opt py-1 bg-cyan-900/60 text-cyan-300 rounded text-center border border-cyan-500 font-bold' : 'btn-weapon-opt py-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded text-center border border-gray-700';
-        });
-
-        renderPriorityListUI(unit);
-    }
-
-    function setupEventListeners() {
-        dom.btnToggleBattle.addEventListener('click', () => {
-            sound.playClick();
-            if (state.isGameOver) resetBattle();
-            state.isRunning = !state.isRunning;
-            dom.statusBadge.textContent = state.isRunning ? 'RUNNING' : 'PAUSED';
-            dom.statusBadge.className = state.isRunning ? 'px-2 py-0.5 text-[10px] font-mono font-bold bg-cyan-950 text-cyan-400 border border-cyan-600 rounded' : 'px-2 py-0.5 text-[10px] font-mono font-bold bg-yellow-950 text-yellow-400 border border-yellow-600 rounded';
-            dom.btnToggleBattle.textContent = state.isRunning ? 'STOP SIM' : 'RESUME SIM';
-            addLog(state.isRunning ? 'SIMULATION STARTED.' : 'SIMULATION PAUSED.');
-        });
-
-        dom.btnResetBattle.addEventListener('click', () => { sound.playClick(); resetBattle(); });
-        dom.btnToggleTracking.addEventListener('click', () => {
-            sound.playClick(); state.isAutoTracking = !state.isAutoTracking;
-            dom.txtTracking.textContent = state.isAutoTracking ? 'ON' : 'OFF';
-            dom.txtTracking.className = state.isAutoTracking ? 'text-cyan-400 font-bold' : 'text-gray-500 font-bold';
-        });
-        dom.btnToggleLead.addEventListener('click', () => {
-            sound.playClick();
-            const unit = state.activeTab === 'PLAYER' ? state.player : state.enemy;
-            unit.isLeadAimEnabled = !unit.isLeadAimEnabled;
-            dom.txtLead.textContent = unit.isLeadAimEnabled ? 'ON' : 'OFF';
-        });
-        dom.btnToggleCover.addEventListener('click', () => {
-            sound.playClick();
-            const unit = state.activeTab === 'PLAYER' ? state.player : state.enemy;
-            unit.useCover = !unit.useCover; syncAssemblyUIForUnit(unit);
-        });
-        dom.btnCloseAar.addEventListener('click', () => { sound.playClick(); dom.aarModal.classList.add('hidden'); resetBattle(); });
-        dom.tabPlayer.addEventListener('click', () => switchTab('PLAYER'));
-        dom.tabEnemy.addEventListener('click', () => switchTab('ENEMY'));
-
-        dom.sliderThreshold.addEventListener('input', e => {
-            const val = parseFloat(e.target.value);
-            const unit = state.activeTab === 'PLAYER' ? state.player : state.enemy;
-            unit.distanceThreshold = val; dom.txtThresholdVal.textContent = `${val}.0m`;
-        });
-
-        document.querySelectorAll('.btn-frame-opt').forEach(btn => {
-            btn.addEventListener('click', () => {
-                sound.playClick();
-                const frame = btn.dataset.frame, unit = state.activeTab === 'PLAYER' ? state.player : state.enemy;
-                unit.frameType = frame;
-                const spec = FRAME_SPECS[frame];
-                unit.hp = spec.hp; unit.maxHP = spec.hp; unit.maxEN = spec.maxEN; unit.en = spec.maxEN; unit.enRecoveryRate = spec.enRecoveryRate; unit.sensorRange = spec.sensorRange; unit.speed = spec.speed;
-                rebuildRobotMesh(unit); syncAssemblyUIForUnit(unit);
-            });
-        });
-
-        document.querySelectorAll('.btn-weapon-opt').forEach(btn => {
-            btn.addEventListener('click', () => {
-                sound.playClick();
-                const w = btn.dataset.weapon, unit = state.activeTab === 'PLAYER' ? state.player : state.enemy;
-                unit.weaponType = w; syncAssemblyUIForUnit(unit);
-            });
-        });
-    }
-
-    function resetBattle() {
-        state.isRunning = false; state.isGameOver = false;
-        state.telemetry.player = { distanceSum: 0, totalFrames: 0, totalShotsFired: 0, totalShotsHit: 0, timeInLOS: 0, timeOverheated: 0 };
-        state.telemetry.enemy = { distanceSum: 0, totalFrames: 0, totalShotsFired: 0, totalShotsHit: 0, timeInLOS: 0, timeOverheated: 0 };
-
-        state.player.hp = state.player.maxHP; state.player.en = state.player.maxEN; state.player.isOverheated = false;
-        state.enemy.hp = state.enemy.maxHP; state.enemy.en = state.enemy.maxEN; state.enemy.isOverheated = false;
-
-        playerRobot.position.set(-18, 0, 0); enemyRobot.position.set(18, 0, 0);
-        playerRobot.rotation.y = Math.PI / 2; enemyRobot.rotation.y = -Math.PI / 2;
-        camState.target.set(0, 0, 0);
-
-        bullets.forEach(b => scene.remove(b.mesh)); particles.forEach(p => scene.remove(p.mesh));
-        bullets = []; particles = [];
-
-        dom.statusBadge.textContent = 'STOPPED'; dom.statusBadge.className = 'px-2 py-0.5 text-[10px] font-mono font-bold bg-gray-800 text-gray-400 border border-gray-600 rounded';
-        dom.btnToggleBattle.textContent = 'BATTLE START'; dom.aarModal.classList.add('hidden');
-        dom.hudActiveChip.textContent = 'IDLE'; dom.hudOverheatWarn.classList.add('hidden');
-        addLog('SIMULATION RESET.');
-    }
-
-    function animate() {
-        requestAnimationFrame(animate);
-        const now = performance.now();
-
-        if (state.isRunning && !state.isGameOver) {
-            state.player.velocity.subVectors(playerRobot.position, state.player.prevPos);
-            state.enemy.velocity.subVectors(enemyRobot.position, state.enemy.prevPos);
-            state.player.prevPos.copy(playerRobot.position);
-            state.enemy.prevPos.copy(enemyRobot.position);
-
-            evaluateRobotLogicForUnit(state.player, playerRobot, enemyRobot, now);
-            evaluateRobotLogicForUnit(state.enemy, enemyRobot, playerRobot, now);
-            updateBulletsAndParticles();
-
-            if (state.player.hp <= 0 || state.enemy.hp <= 0) {
-                state.isGameOver = true; sound.playExplosion();
-                let loser = state.player.hp <= 0 ? state.player : state.enemy;
-                let winner = loser === state.player ? state.enemy : state.player;
-                dom.statusBadge.textContent = 'FINISHED';
-                dom.statusBadge.className = 'px-2 py-0.5 text-[10px] font-mono font-bold bg-red-950 text-red-400 border border-red-600 rounded';
-                dom.btnToggleBattle.textContent = 'BATTLE START';
-                setTimeout(() => showAARModal(loser, winner), 500);
-            }
-        }
-
-        if (state.isAutoTracking && playerRobot) camState.target.lerp(playerRobot.position.clone().add(new THREE.Vector3(0, 1.2, 0)), 0.08);
-
-        const cx = camState.target.x + camState.distance * Math.sin(camState.yaw) * Math.cos(camState.pitch);
-        const cy = camState.target.y + camState.distance * Math.sin(camState.pitch);
-        const cz = camState.target.z + camState.distance * Math.cos(camState.yaw) * Math.cos(camState.pitch);
-        camera.position.set(cx, cy, cz); camera.lookAt(camState.target);
-
-        const active = state.activeTab === 'PLAYER' ? state.player : state.enemy;
-        dom.barHP.style.width = `${Math.max(0, (active.hp / active.maxHP) * 100)}%`;
-        dom.txtHPVal.textContent = `${active.hp} / ${active.maxHP}`;
-        dom.barEN.style.width = `${Math.max(0, (active.en / active.maxEN) * 100)}%`;
-        dom.txtENVal.textContent = `${Math.round(active.en)} / ${active.maxEN}`;
-
-        renderer.render(scene, camera);
-    }
-
-    window.onload = function() {
-        init3D(); setupEventListeners(); syncAssemblyUIForUnit(state.player); animate();
-    };
-</script>
+<!-- Global Control Toolbar -->
+<div class="p-2 grid grid-cols-2 gap-1.5 bg-black/40 border-b border-cyan-900/50 text-xs">
+    <button id="btn-toggle-battle" class="cyber-btn bg-cyan-600 hover:bg-cyan-500 text-black font-bold py-2 px-3 text-center text-xs tracking-wider uppercase font-rajdhani">
+        BATTLE START
+    </button>
+    <button id="btn-reset-battle" class="cyber-btn bg-gray-800 hover:bg-gray-700 text-gray-200 font-bold py-2 px-3 text-center text-xs tracking-wider uppercase font-rajdhani border border-gray-600">
+        RESET SIM
+    </button>
+    <button id="btn-toggle-tracking" class="cyber-btn bg-indigo-950 hover:bg-indigo-900 text-indigo-300 border border-indigo-500/40 py-1 px-2 text-[11px] font-mono">
+        TRACKING: <span id="txt-tracking" class="text-cyan-400 font-bold">ON</span>
+    </button>
+    <button id="btn-toggle-lead" class="cyber-btn bg-indigo-950 hover:bg-indigo-900 text-indigo-300 border border-indigo-500/40 py-1 px-2 text-[11px] font-mono">
+        LEAD AIM: <span id="txt-lead" class="text-cyan-400 font-bold">ON</span>
+    </button>
+</div>
+
+<!-- Unit Selector Tabs -->
+<div class="flex border-b border-gray-800 bg-black/60 text-xs font-rajdhani font-bold">
+    <button id="tab-player" class="tab-btn active flex-1 py-2 text-center text-cyan-400 hover:text-cyan-200 transition">
+        BLUE ROBOT (PLAYER)
+    </button>
+    <button id="tab-enemy" class="tab-btn flex-1 py-2 text-center text-red-400 hover:text-red-200 transition">
+        RED ROBOT (ENEMY)
+    </button>
+</div>
+
+<!-- Scrollable Logic & Assembly Controls -->
+<div class="flex-1 overflow-y-auto p-3 space-y-3 font-sans text-xs">
+
+    <!-- Unit Telemetry Card -->
+    <div class="bg-black/50 p-2.5 rounded border border-gray-800 space-y-2">
+        <div class="flex justify-between items-center font-mono text-[11px]">
+            <span id="txt-unit-title" class="font-bold text-cyan-400">BLUE ROBOT TELEMETRY</span>
+            <span id="txt-unit-los" class="text-emerald-400 text-[10px] bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-800">VISUAL: CLEAR</span>
+        </div>
+
+        <div>
+            <div class="flex justify-between text-[10px] font-mono text-gray-400 mb-0.5">
+                <span>ARMOR (HP)</span>
+                <span id="txt-hp-val">3000 / 3000</span>
+            </div>
+            <div class="w-full bg-gray-900 h-2 rounded overflow-hidden p-0.5 border border-gray-800">
+                <div id="bar-hp" class="gauge-fill bg-cyan-400 h-full rounded-sm" style="width: 100%;"></div>
+            </div>
+        </div>
+
+        <div>
+            <div class="flex justify-between text-[10px] font-mono text-gray-400 mb-0.5">
+                <span>ENERGY (EN)</span>
+                <span id="txt-en-val" class="text-purple-400 font-bold">100 / 100</span>
+            </div>
+            <div class="w-full bg-gray-900 h-2 rounded overflow-hidden p-0.5 border border-gray-800">
+                <div id="bar-en" class="gauge-fill bg-purple-500 h-full rounded-sm" style="width: 100%;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assembly Controls -->
+    <div class="bg-black/40 p-2.5 rounded border border-gray-800/80 space-y-2.5">
+        <div class="text-[11px] font-bold font-rajdhani text-gray-300 tracking-wider border-b border-gray-800 pb-1">
+            ASSEMBLY & SPECIFICATION
+        </div>
+
+        <div>
+            <label class="block text-[10px] font-mono text-gray-400 mb-1">FRAME TYPE (SPEED / EN / SENSOR)</label>
+            <div class="grid grid-cols-3 gap-1 text-[10px] font-mono">
+                <button data-frame="LIGHT" class="btn-frame-opt py-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded text-center border border-gray-700">LIGHT</button>
+                <button data-frame="MEDIUM" class="btn-frame-opt py-1 bg-cyan-900/60 text-cyan-300 rounded text-center border border-cyan-500 font-bold">MEDIUM</button>
+                <button data-frame="HEAVY" class="btn-frame-opt py-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded text-center border border-gray-700">HEAVY</button>
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-[10px] font-mono text-gray-400 mb-1">WEAPON TYPE (DAMAGE / RATE / DROPOFF)</label>
+            <div class="grid grid-cols-3 gap-1 text-[10px] font-mono">
+                <button data-weapon="SHOTGUN" class="btn-weapon-opt py-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded text-center border border-gray-700">SHOTGUN</button>
+                <button data-weapon="MACHINEGUN" class="btn-weapon-opt py-1 bg-cyan-900/60 text-cyan-300 rounded text-center border border-cyan-500 font-bold">M-GUN</button>
+                <button data-weapon="RIFLE" class="btn-weapon-opt py-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded text-center border border-gray-700">RIFLE</button>
+            </div>
+        </div>
+
+        <div>
+            <div class="flex justify-between items-center text-[10px] font-mono text-gray-400 mb-1">
+                <span>COMBAT RANGE THRESHOLD</span>
+                <span id="txt-threshold-val" class="text-cyan-400 font-bold">12.0m</span>
+            </div>
+            <input id="slider-threshold" type="range" min="5" max="28" step="1" value="12" class="w-full">
+        </div>
+
+        <div>
+            <div class="flex justify-between items-center text-[10px] font-mono text-gray-400 mb-1">
+                <span>OBSTACLE COVER TACTICS</span>
+                <span id="txt-cover-status" class="text-gray-500 font-bold">OFF</span>
+            </div>
+            <button id="btn-toggle-cover" class="w-full py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded text-center border border-gray-700 font-mono text-[10px] transition">
+                COVER USE: <span id="txt-cover-btn" class="text-gray-400 font-bold">OFF (NORMAL)</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Customizable Priority Pipeline -->
+    <div class="space-y-2">
+        <div class="text-[11px] font-bold font-rajdhani text-gray-300 tracking-wider flex justify-between items-center border-b border-gray-800 pb-1">
+            <span>CUSTOMIZABLE PRIORITY PIPELINE</span>
+            <span id="txt-sensor-info" class="text-[9px] font-mono text-purple-400">SENSOR: 16m</span>
+        </div>
+        <p class="text-[10px] text-gray-400 font-mono">Click UP/DOWN to reorder evaluation priority (Top = Highest)</p>
+
+        <div id="priority-list-container" class="space-y-1.5 font-mono text-xs">
+            <!-- Dynamic Priority Chips -->
+        </div>
+    </div>
+
+    <!-- Terminal Log Window -->
+    <div class="bg-black/70 rounded p-2 border border-gray-800 font-mono text-[10px] space-y-1 h-28 overflow-y-auto" id="log-window">
+        <div class="text-gray-500">[SYSTEM] Robot Battle Engine initialized. Ready.</div>
+    </div>
+</div>
+
+
+<div class="absolute top-3 left-3 pointer-events-none space-y-1 font-mono text-xs">
+    <div class="bg-black/70 backdrop-blur border border-cyan-500/40 px-3 py-1.5 rounded text-cyan-300 font-bold flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+        ACTIVE BEHAVIOR: <span id="hud-active-chip" class="text-white">IDLE</span>
+    </div>
+    <div id="hud-overheat-warn" class="hidden bg-red-950/90 border border-red-500 text-red-300 px-3 py-1 rounded font-bold animate-pulse">
+        &gt;&gt; OVERHEAT WARNING: ENERGY DEPLETED &lt;&lt;
+    </div>
+</div>
+
+<div class="absolute top-3 right-3 pointer-events-none bg-black/60 backdrop-blur border border-gray-800 p-2 rounded text-[10px] font-mono text-cyan-300/80 space-y-0.5">
+    <div><span class="text-white font-bold">ドラッグ:</span> カメラ回転</div>
+    <div><span class="text-white font-bold">右ドラッグ / 2本指:</span> 移動(パン)</div>
+    <div><span class="text-white font-bold">ホイール / ピンチ:</span> 拡大・縮小</div>
+</div>
+
+<div class="absolute bottom-3 right-3 pointer-events-none bg-black/60 backdrop-blur border border-gray-800 p-2 rounded text-[10px] font-mono text-gray-400 space-y-1">
+    <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 bg-blue-500 rounded-sm"></span> BLUE ROBOT (PLAYER)</div>
+    <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 bg-red-500 rounded-sm"></span> RED ROBOT (ENEMY)</div>
+    <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 bg-slate-700 border border-cyan-400 rounded-sm"></span> OBSTACLE (WALL / LOS BLOCK)</div>
+</div>
+
+
+    <div class="space-y-3 font-mono text-xs max-h-72 overflow-y-auto pr-1" id="aar-content"></div>
+
+    <div class="pt-2 flex justify-end">
+        <button id="btn-close-aar" class="cyber-btn bg-cyan-600 hover:bg-cyan-500 text-black font-bold py-2 px-6 text-xs uppercase font-rajdhani">
+            CONFIRM & RESTART
+        </button>
+    </div>
+</div>
